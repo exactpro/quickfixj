@@ -106,9 +106,12 @@ public class ProtocolFactory {
         }
     }
 
-    public static IoConnector createIoConnector(SocketAddress address) throws ConfigError {
+    public static IoConnector createIoConnector(SocketAddress address, IoConnector ioConnector) throws ConfigError {
         if (address instanceof InetSocketAddress) {
-            return new NioSocketConnector();
+            if(ioConnector == null){
+                ioConnector = new NioSocketConnector();
+            }
+            return ioConnector;
         } else if (address instanceof VmPipeAddress) {
             return new VmPipeConnector();
         } else {

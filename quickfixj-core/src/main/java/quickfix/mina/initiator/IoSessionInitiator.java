@@ -109,10 +109,7 @@ public class IoSessionInitiator {
             this.keyStorePassword = keyStorePassword;
             this.enableProtocole = enableProtocole;
             this.cipherSuites = cipherSuites;
-            if(ioConnector == null) {
-                ioConnector = ProtocolFactory.createIoConnector(socketAddresses[0]);
-            }
-            this.ioConnector = ioConnector;
+            this.ioConnector = ProtocolFactory.createIoConnector(socketAddresses[0], ioConnector);
             CompositeIoFilterChainBuilder ioFilterChainBuilder = new CompositeIoFilterChainBuilder(
                     userIoFilterChainBuilder);
 
