@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.buffer.SimpleBufferAllocator;
+import org.apache.mina.core.service.IoConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,20 +59,22 @@ import quickfix.mina.ssl.SSLSupport;
 public abstract class AbstractSocketInitiator extends SessionConnector implements Initiator {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
+    private IoConnector ioConnector;
     private final Set<IoSessionInitiator> initiators = new HashSet<IoSessionInitiator>();
 
     protected AbstractSocketInitiator(Application application,
             MessageStoreFactory messageStoreFactory, SessionSettings settings,
-            LogFactory logFactory, MessageFactory messageFactory) throws ConfigError {
+            LogFactory logFactory, MessageFactory messageFactory, IoConnector ioConnector) throws ConfigError {
         this(settings, new DefaultSessionFactory(application, messageStoreFactory, logFactory,
-                messageFactory));
+                messageFactory), ioConnector);
     }
 
-    protected AbstractSocketInitiator(SessionSettings settings, SessionFactory sessionFactory)
+    protected AbstractSocketInitiator(SessionSettings settings, SessionFactory sessionFactory, IoConnector ioConnector)
             throws ConfigError {
         super(settings, sessionFactory);
         IoBuffer.setAllocator(new SimpleBufferAllocator());
         IoBuffer.setUseDirectBuffer(false);
+        this.ioConnector = ioConnector;
     }
 
     protected void createSessionInitiators()
@@ -116,7 +119,7 @@ public abstract class AbstractSocketInitiator extends SessionConnector implement
                 final IoSessionInitiator ioSessionInitiator = new IoSessionInitiator(session,
                         socketAddresses, localAddress, reconnectingIntervals, getScheduledExecutorService(),
                         networkingOptions, getEventHandlingStrategy(), getIoFilterChainBuilder(),
-                        sslEnabled, keyStoreName, keyStorePassword, enableProtocole, cipherSuites);
+                        sslEnabled, keyStoreName, keyStorePassword, enableProtocole, cipherSuites, ioConnector);
 
                 initiators.add(ioSessionInitiator);
             }

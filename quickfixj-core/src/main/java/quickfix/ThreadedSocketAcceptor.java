@@ -19,6 +19,7 @@
 
 package quickfix;
 
+import org.apache.mina.core.service.IoAcceptor;
 import quickfix.mina.EventHandlingStrategy;
 import quickfix.mina.ThreadPerSessionEventHandlingStrategy;
 import quickfix.mina.acceptor.AbstractSocketAcceptor;
@@ -31,41 +32,41 @@ public class ThreadedSocketAcceptor extends AbstractSocketAcceptor {
 
     public ThreadedSocketAcceptor(Application application, MessageStoreFactory messageStoreFactory,
                                   SessionSettings settings, LogFactory logFactory, MessageFactory messageFactory,
-                                  int queueCapacity )
+                                  int queueCapacity, IoAcceptor ioAcceptor)
                                   throws ConfigError {
-        super(application, messageStoreFactory, settings, logFactory, messageFactory);
+        super(application, messageStoreFactory, settings, logFactory, messageFactory, ioAcceptor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, queueCapacity);
     }
 
     public ThreadedSocketAcceptor(Application application, MessageStoreFactory messageStoreFactory,
-            SessionSettings settings, LogFactory logFactory, MessageFactory messageFactory)
+            SessionSettings settings, LogFactory logFactory, MessageFactory messageFactory, IoAcceptor ioAcceptor)
             throws ConfigError {
-        super(application, messageStoreFactory, settings, logFactory, messageFactory);
+        super(application, messageStoreFactory, settings, logFactory, messageFactory, ioAcceptor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 
     public ThreadedSocketAcceptor(Application application, MessageStoreFactory messageStoreFactory,
                                   SessionSettings settings, MessageFactory messageFactory,
-                                  int queueCapacity ) throws ConfigError {
-        super(application, messageStoreFactory, settings, messageFactory);
+                                  int queueCapacity, IoAcceptor ioAcceptor) throws ConfigError {
+        super(application, messageStoreFactory, settings, messageFactory, ioAcceptor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, queueCapacity);
     }
 
     public ThreadedSocketAcceptor(Application application, MessageStoreFactory messageStoreFactory,
-            SessionSettings settings, MessageFactory messageFactory) throws ConfigError {
-        super(application, messageStoreFactory, settings, messageFactory);
+            SessionSettings settings, MessageFactory messageFactory, IoAcceptor ioAcceptor) throws ConfigError {
+        super(application, messageStoreFactory, settings, messageFactory, ioAcceptor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 
-    public ThreadedSocketAcceptor(SessionFactory sessionFactory, SessionSettings settings, int queueCapacity)
+    public ThreadedSocketAcceptor(SessionFactory sessionFactory, SessionSettings settings, int queueCapacity, IoAcceptor ioAcceptor)
             throws ConfigError {
-        super(settings, sessionFactory);
+        super(settings, sessionFactory, ioAcceptor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, queueCapacity);
     }
 
-    public ThreadedSocketAcceptor(SessionFactory sessionFactory, SessionSettings settings)
+    public ThreadedSocketAcceptor(SessionFactory sessionFactory, SessionSettings settings, IoAcceptor ioAcceptor)
             throws ConfigError {
-        super(settings, sessionFactory);
+        super(settings, sessionFactory, ioAcceptor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 

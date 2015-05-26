@@ -48,7 +48,7 @@ sourceSets {
             srcDir '../quickfixj-codegenerator/srcgen'
         }
         resources {
-            srcDir "dicts/${release}"
+            srcDir "../dicts/${release}"
         }
     }
 }
@@ -105,14 +105,14 @@ clean {
     delete 'srcgen'
 }
 
-//task zipDicts(type: Zip) {
-//    classifier = 'dicts'
-//    from ('dicts')
-//}
-//
-//artifacts {
-//    archives(zipDicts)
-//}
+task zipDicts(type: Zip) {
+    classifier = 'dicts'
+    from ('../dicts')
+}
+
+artifacts {
+    archives(zipDicts)
+}
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.0'

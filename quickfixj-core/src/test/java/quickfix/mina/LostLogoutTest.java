@@ -180,7 +180,7 @@ public class LostLogoutTest {
             settings.setString(sid, "TargetCompID", sid.getTargetCompID());
 
             initiator = new SocketInitiator(this, new MemoryStoreFactory(), settings,
-                    new ScreenLogFactory(), new DefaultMessageFactory());
+                    new ScreenLogFactory(), new DefaultMessageFactory(), null);
             initiator.start();
             session = Session.lookupSession(sid);
         }

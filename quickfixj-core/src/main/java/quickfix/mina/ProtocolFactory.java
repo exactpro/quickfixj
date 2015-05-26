@@ -90,11 +90,15 @@ public class ProtocolFactory {
         }
     }
 
-    public static IoAcceptor createIoAcceptor(int transportType) {
+    public static IoAcceptor createIoAcceptor(int transportType, IoAcceptor ioAcceptor) {
         if (transportType == SOCKET) {
-            NioSocketAcceptor ret = new NioSocketAcceptor();
-            ret.setReuseAddress(true);
-            return ret;
+            if (ioAcceptor == null) {
+                ioAcceptor = new NioSocketAcceptor();
+            }
+            if(ioAcceptor instanceof NioSocketAcceptor) {
+                ((NioSocketAcceptor)ioAcceptor).setReuseAddress(true);
+            }
+            return ioAcceptor;
         } else if (transportType == VM_PIPE) {
             return new VmPipeAcceptor();
         } else {

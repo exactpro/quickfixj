@@ -61,7 +61,7 @@ public class IoSessionInitiator {
             int[] reconnectIntervalInSeconds, ScheduledExecutorService executor,
             NetworkingOptions networkingOptions, EventHandlingStrategy eventHandlingStrategy,
             IoFilterChainBuilder userIoFilterChainBuilder, boolean sslEnabled, String keyStoreName,
-            String keyStorePassword, String[] enableProtocole, String[] cipherSuites) throws ConfigError {
+            String keyStorePassword, String[] enableProtocole, String[] cipherSuites, IoConnector ioConnector) throws ConfigError {
         this.executor = executor;
         final long[] reconnectIntervalInMillis = new long[reconnectIntervalInSeconds.length];
         for (int ii = 0; ii != reconnectIntervalInSeconds.length; ++ii) {
@@ -70,7 +70,7 @@ public class IoSessionInitiator {
         try {
             reconnectTask = new ConnectTask(sslEnabled, socketAddresses, localAddress, userIoFilterChainBuilder,
                     fixSession, reconnectIntervalInMillis, networkingOptions,
-                    eventHandlingStrategy, keyStoreName, keyStorePassword, enableProtocole, cipherSuites);
+                    eventHandlingStrategy, keyStoreName, keyStorePassword, enableProtocole, cipherSuites, ioConnector);
         } catch (GeneralSecurityException e) {
             throw new ConfigError(e);
         }
@@ -100,7 +100,7 @@ public class IoSessionInitiator {
                 SocketAddress localAddress, IoFilterChainBuilder userIoFilterChainBuilder, Session fixSession,
                 long[] reconnectIntervalInMillis, NetworkingOptions networkingOptions,
                 EventHandlingStrategy eventHandlingStrategy, String keyStoreName,
-                String keyStorePassword, String[] enableProtocole, String[] cipherSuites) throws ConfigError, GeneralSecurityException {
+                String keyStorePassword, String[] enableProtocole, String[] cipherSuites, IoConnector ioConnector) throws ConfigError, GeneralSecurityException {
             this.socketAddresses = socketAddresses;
             this.localAddress = localAddress;
             this.fixSession = fixSession;
@@ -109,7 +109,10 @@ public class IoSessionInitiator {
             this.keyStorePassword = keyStorePassword;
             this.enableProtocole = enableProtocole;
             this.cipherSuites = cipherSuites;
-            ioConnector = ProtocolFactory.createIoConnector(socketAddresses[0]);
+            if(ioConnector == null) {
+                ioConnector = ProtocolFactory.createIoConnector(socketAddresses[0]);
+            }
+            this.ioConnector = ioConnector;
             CompositeIoFilterChainBuilder ioFilterChainBuilder = new CompositeIoFilterChainBuilder(
                     userIoFilterChainBuilder);
 

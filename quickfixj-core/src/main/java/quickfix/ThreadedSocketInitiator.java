@@ -19,6 +19,7 @@
 
 package quickfix;
 
+import org.apache.mina.core.service.IoConnector;
 import quickfix.mina.EventHandlingStrategy;
 import quickfix.mina.ThreadPerSessionEventHandlingStrategy;
 import quickfix.mina.initiator.AbstractSocketInitiator;
@@ -31,43 +32,43 @@ public class ThreadedSocketInitiator extends AbstractSocketInitiator {
 
     public ThreadedSocketInitiator(Application application,
             MessageStoreFactory messageStoreFactory, SessionSettings settings,
-            LogFactory logFactory, MessageFactory messageFactory, int queueCapacity) throws ConfigError {
-        super(application, messageStoreFactory, settings, logFactory, messageFactory);
+            LogFactory logFactory, MessageFactory messageFactory, int queueCapacity, IoConnector ioConnector) throws ConfigError {
+        super(application, messageStoreFactory, settings, logFactory, messageFactory, ioConnector);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, queueCapacity);
     }
 
     public ThreadedSocketInitiator(Application application,
             MessageStoreFactory messageStoreFactory, SessionSettings settings,
-            LogFactory logFactory, MessageFactory messageFactory) throws ConfigError {
-        super(application, messageStoreFactory, settings, logFactory, messageFactory);
+            LogFactory logFactory, MessageFactory messageFactory, IoConnector ioConnector) throws ConfigError {
+        super(application, messageStoreFactory, settings, logFactory, messageFactory, ioConnector);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 
     public ThreadedSocketInitiator(Application application,
             MessageStoreFactory messageStoreFactory, SessionSettings settings,
-            MessageFactory messageFactory, int queueCapacity) throws ConfigError {
+            MessageFactory messageFactory, int queueCapacity, IoConnector ioConnector) throws ConfigError {
         super(application, messageStoreFactory, settings, new ScreenLogFactory(settings),
-                messageFactory);
+                messageFactory, ioConnector);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, queueCapacity);
     }
 
     public ThreadedSocketInitiator(Application application,
             MessageStoreFactory messageStoreFactory, SessionSettings settings,
-            MessageFactory messageFactory) throws ConfigError {
+            MessageFactory messageFactory, IoConnector ioConnector) throws ConfigError {
         super(application, messageStoreFactory, settings, new ScreenLogFactory(settings),
-                messageFactory);
+                messageFactory, ioConnector);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 
-    public ThreadedSocketInitiator(SessionFactory sessionFactory, SessionSettings settings, int queueCapacity)
+    public ThreadedSocketInitiator(SessionFactory sessionFactory, SessionSettings settings, int queueCapacity, IoConnector ioConnector)
             throws ConfigError {
-        super(settings, sessionFactory);
+        super(settings, sessionFactory, ioConnector);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, queueCapacity);
     }
 
-    public ThreadedSocketInitiator(SessionFactory sessionFactory, SessionSettings settings)
+    public ThreadedSocketInitiator(SessionFactory sessionFactory, SessionSettings settings, IoConnector ioConnector)
             throws ConfigError {
-        super(settings, sessionFactory);
+        super(settings, sessionFactory, ioConnector);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 

@@ -66,27 +66,29 @@ public abstract class AbstractSocketAcceptor extends SessionConnector implements
     private final SessionFactory sessionFactory;
     private final Map<SocketAddress, AcceptorSocketDescriptor> socketDescriptorForAddress = new HashMap<SocketAddress, AcceptorSocketDescriptor>();
     private final Map<AcceptorSocketDescriptor, IoAcceptor> ioAcceptors = new HashMap<AcceptorSocketDescriptor, IoAcceptor>();
+    private IoAcceptor ioAcceptor;
 
-    protected AbstractSocketAcceptor(SessionSettings settings, SessionFactory sessionFactory)
+    protected AbstractSocketAcceptor(SessionSettings settings, SessionFactory sessionFactory, IoAcceptor ioAcceptor)
             throws ConfigError {
         super(settings, sessionFactory);
         IoBuffer.setAllocator(new SimpleBufferAllocator());
         IoBuffer.setUseDirectBuffer(false);
         this.sessionFactory = sessionFactory;
+        this.ioAcceptor = ioAcceptor;
     }
 
     protected AbstractSocketAcceptor(Application application,
             MessageStoreFactory messageStoreFactory, SessionSettings settings,
-            MessageFactory messageFactory) throws ConfigError {
+            MessageFactory messageFactory, IoAcceptor ioAcceptor) throws ConfigError {
         this(application, messageStoreFactory, settings, new ScreenLogFactory(settings),
-                messageFactory);
+                messageFactory, ioAcceptor);
     }
 
     protected AbstractSocketAcceptor(Application application,
             MessageStoreFactory messageStoreFactory, SessionSettings settings,
-            LogFactory logFactory, MessageFactory messageFactory) throws ConfigError {
+            LogFactory logFactory, MessageFactory messageFactory, IoAcceptor ioAcceptor) throws ConfigError {
         this(settings, new DefaultSessionFactory(application, messageStoreFactory, logFactory,
-                messageFactory));
+                messageFactory), ioAcceptor);
     }
 
     // TODO SYNC Does this method really need synchronization?
@@ -141,19 +143,19 @@ public abstract class AbstractSocketAcceptor extends SessionConnector implements
             sessionProviders.put(socketDescriptor.getAddress(), sessionProvider);
         }
 
-        IoAcceptor ioAcceptor = ioAcceptors.get(socketDescriptor);
-        if (ioAcceptor == null && init) {
-            ioAcceptor = ProtocolFactory.createIoAcceptor(transportType);
+        IoAcceptor acceptor = ioAcceptors.get(socketDescriptor);
+        if (acceptor == null && init) {
+            acceptor = ProtocolFactory.createIoAcceptor(transportType, ioAcceptor);
             try {
                 SessionSettings settings = getSettings();
-                ioAcceptor.setHandler(new AcceptorIoHandler(sessionProvider, new NetworkingOptions(
+                acceptor.setHandler(new AcceptorIoHandler(sessionProvider, new NetworkingOptions(
                         settings.getDefaultProperties()), getEventHandlingStrategy()));
             } catch (FieldConvertError e) {
                 throw new ConfigError(e);
             }
-            ioAcceptors.put(socketDescriptor, ioAcceptor);
+            ioAcceptors.put(socketDescriptor, acceptor);
         }
-        return ioAcceptor;
+        return acceptor;
     }
 
     private IoAcceptor getIoAcceptor(AcceptorSocketDescriptor socketDescriptor) throws ConfigError {
