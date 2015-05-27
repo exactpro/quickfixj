@@ -97,7 +97,7 @@ public class DefaultSessionFactory implements SessionFactory {
 
             if (sessionID.isFIXT()) {
                 if (!settings.isSetting(sessionID, Session.SETTING_DEFAULT_APPL_VER_ID)) {
-                    throw new ConfigError(Session.SETTING_DEFAULT_APPL_VER_ID
+                    throw new SessionConfigError(Session.SETTING_DEFAULT_APPL_VER_ID, Session.SETTING_DEFAULT_APPL_VER_ID
                             + " is required for FIXT transport");
                 }
                 senderDefaultApplVerID = new DefaultApplVerID(toApplVerID(

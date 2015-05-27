@@ -32,6 +32,8 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.quickfixj.CharsetSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -74,6 +76,7 @@ import quickfix.field.XmlDataLen;
  * Represents a FIX message.
  */
 public class Message extends FieldMap {
+    private static Logger logger = LoggerFactory.getLogger(Message.class);
 
     static final long serialVersionUID = -3193357271891865972L;
     protected Header header = new Header();
@@ -632,8 +635,11 @@ public class Message extends FieldMap {
                     final int offset = indexOf(tag, fieldOrder);
                     if (offset > -1) {
                         if (offset <= previousOffset) {
-                            throw new FieldException(
-                                    SessionRejectReason.REPEATING_GROUP_FIELDS_OUT_OF_ORDER, tag);
+                            logger.warn("previousOffset == " + previousOffset + " -> " + offset);
+                            logger.warn("FieldException("
+                                    +SessionRejectReason.REPEATING_GROUP_FIELDS_OUT_OF_ORDER+", "+field.getTag()+")");
+//                            throw new FieldException(
+//                                    SessionRejectReason.REPEATING_GROUP_FIELDS_OUT_OF_ORDER, tag);
                         }
                         previousOffset = offset;
                     }
