@@ -26,12 +26,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 import javax.net.ssl.SSLContext;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.buffer.SimpleBufferAllocator;
+import org.apache.mina.core.service.IoProcessor;
 import org.apache.mina.filter.ssl.SslFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 
@@ -66,29 +68,30 @@ public abstract class AbstractSocketAcceptor extends SessionConnector implements
     private final SessionFactory sessionFactory;
     private final Map<SocketAddress, AcceptorSocketDescriptor> socketDescriptorForAddress = new HashMap<SocketAddress, AcceptorSocketDescriptor>();
     private final Map<AcceptorSocketDescriptor, IoAcceptor> ioAcceptors = new HashMap<AcceptorSocketDescriptor, IoAcceptor>();
-    private IoAcceptor ioAcceptor;
+    private final Map<IoAcceptor, IoProcessor> ioProcessors = new HashMap<IoAcceptor, IoProcessor>();
+    private Executor executor;
 
-    protected AbstractSocketAcceptor(SessionSettings settings, SessionFactory sessionFactory, IoAcceptor ioAcceptor)
+    protected AbstractSocketAcceptor(SessionSettings settings, SessionFactory sessionFactory, Executor executor)
             throws ConfigError {
         super(settings, sessionFactory);
         IoBuffer.setAllocator(new SimpleBufferAllocator());
         IoBuffer.setUseDirectBuffer(false);
         this.sessionFactory = sessionFactory;
-        this.ioAcceptor = ioAcceptor;
+        this.executor = executor;
     }
 
     protected AbstractSocketAcceptor(Application application,
             MessageStoreFactory messageStoreFactory, SessionSettings settings,
-            MessageFactory messageFactory, IoAcceptor ioAcceptor) throws ConfigError {
+            MessageFactory messageFactory, Executor executor) throws ConfigError {
         this(application, messageStoreFactory, settings, new ScreenLogFactory(settings),
-                messageFactory, ioAcceptor);
+                messageFactory, executor);
     }
 
     protected AbstractSocketAcceptor(Application application,
             MessageStoreFactory messageStoreFactory, SessionSettings settings,
-            LogFactory logFactory, MessageFactory messageFactory, IoAcceptor ioAcceptor) throws ConfigError {
+            LogFactory logFactory, MessageFactory messageFactory, Executor executor) throws ConfigError {
         this(settings, new DefaultSessionFactory(application, messageStoreFactory, logFactory,
-                messageFactory), ioAcceptor);
+                messageFactory), executor);
     }
 
     // TODO SYNC Does this method really need synchronization?
@@ -145,7 +148,9 @@ public abstract class AbstractSocketAcceptor extends SessionConnector implements
 
         IoAcceptor acceptor = ioAcceptors.get(socketDescriptor);
         if (acceptor == null && init) {
-            acceptor = ProtocolFactory.createIoAcceptor(transportType, ioAcceptor);
+            Map.Entry<IoAcceptor, IoProcessor> entry = ProtocolFactory.createIoAcceptor(transportType, executor);
+            acceptor = entry.getKey();
+            IoProcessor ioProcessor = entry.getValue();
             try {
                 SessionSettings settings = getSettings();
                 acceptor.setHandler(new AcceptorIoHandler(sessionProvider, new NetworkingOptions(
@@ -154,6 +159,7 @@ public abstract class AbstractSocketAcceptor extends SessionConnector implements
                 throw new ConfigError(e);
             }
             ioAcceptors.put(socketDescriptor, acceptor);
+            ioProcessors.put(acceptor, ioProcessor);
         }
         return acceptor;
     }
@@ -258,6 +264,11 @@ public abstract class AbstractSocketAcceptor extends SessionConnector implements
             IoAcceptor ioAcceptor = ioIt.next();
             SocketAddress localAddress = ioAcceptor.getLocalAddress();
             ioAcceptor.unbind();
+//            ioAcceptor.dispose();
+//            if(ioProcessors.get(ioAcceptor) != null){
+//                ioProcessors.get(ioAcceptor).dispose();
+//                ioProcessors.remove(ioAcceptor);
+//            }
             log.info("No longer accepting connections on " + localAddress);
             ioIt.remove();
         }

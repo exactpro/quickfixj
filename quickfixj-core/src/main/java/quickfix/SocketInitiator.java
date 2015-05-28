@@ -19,10 +19,11 @@
 
 package quickfix;
 
-import org.apache.mina.core.service.IoConnector;
 import quickfix.mina.EventHandlingStrategy;
 import quickfix.mina.SingleThreadedEventHandlingStrategy;
 import quickfix.mina.initiator.AbstractSocketInitiator;
+
+import java.util.concurrent.Executor;
 
 /**
  * Initiates connections and uses a single thread to process messages for all
@@ -34,9 +35,9 @@ public class SocketInitiator extends AbstractSocketInitiator {
     private final SingleThreadedEventHandlingStrategy eventHandlingStrategy;
 
     public SocketInitiator(Application application, MessageStoreFactory messageStoreFactory,
-            SessionSettings settings, MessageFactory messageFactory, int queueCapacity, IoConnector ioConnector) throws ConfigError {
+            SessionSettings settings, MessageFactory messageFactory, int queueCapacity, Executor executor) throws ConfigError {
         super(application, messageStoreFactory, settings, new ScreenLogFactory(settings),
-                messageFactory, ioConnector);
+                messageFactory, executor);
         if (settings == null) {
             throw new ConfigError("no settings");
         }
@@ -44,9 +45,9 @@ public class SocketInitiator extends AbstractSocketInitiator {
     }
 
     public SocketInitiator(Application application, MessageStoreFactory messageStoreFactory,
-            SessionSettings settings, MessageFactory messageFactory, IoConnector ioConnector) throws ConfigError {
+            SessionSettings settings, MessageFactory messageFactory, Executor executor) throws ConfigError {
         super(application, messageStoreFactory, settings, new ScreenLogFactory(settings),
-                messageFactory, ioConnector);
+                messageFactory, executor);
         if (settings == null) {
             throw new ConfigError("no settings");
         }
@@ -54,9 +55,9 @@ public class SocketInitiator extends AbstractSocketInitiator {
     }
 
     public SocketInitiator(Application application, MessageStoreFactory messageStoreFactory,
-            SessionSettings settings, LogFactory logFactory, MessageFactory messageFactory, IoConnector ioConnector)
+            SessionSettings settings, LogFactory logFactory, MessageFactory messageFactory, Executor executor)
             throws ConfigError {
-        super(application, messageStoreFactory, settings, logFactory, messageFactory, ioConnector);
+        super(application, messageStoreFactory, settings, logFactory, messageFactory, executor);
         if (settings == null) {
             throw new ConfigError("no settings");
         }
@@ -65,9 +66,9 @@ public class SocketInitiator extends AbstractSocketInitiator {
 
     public SocketInitiator(Application application, MessageStoreFactory messageStoreFactory,
             SessionSettings settings, LogFactory logFactory, MessageFactory messageFactory,
-            int queueCapacity, IoConnector ioConnector)
+            int queueCapacity, Executor executor)
             throws ConfigError {
-        super(application, messageStoreFactory, settings, logFactory, messageFactory, ioConnector);
+        super(application, messageStoreFactory, settings, logFactory, messageFactory, executor);
         if (settings == null) {
             throw new ConfigError("no settings");
         }
@@ -75,8 +76,8 @@ public class SocketInitiator extends AbstractSocketInitiator {
     }
 
     public SocketInitiator(SessionFactory sessionFactory, SessionSettings settings,
-           int queueCapacity, IoConnector ioConnector) throws ConfigError {
-        super(settings, sessionFactory, ioConnector);
+           int queueCapacity, Executor executor) throws ConfigError {
+        super(settings, sessionFactory, executor);
         eventHandlingStrategy = new SingleThreadedEventHandlingStrategy(this, queueCapacity);
     }
 

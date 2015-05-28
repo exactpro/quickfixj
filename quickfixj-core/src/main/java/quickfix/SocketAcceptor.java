@@ -19,10 +19,11 @@
 
 package quickfix;
 
-import org.apache.mina.core.service.IoAcceptor;
 import quickfix.mina.EventHandlingStrategy;
 import quickfix.mina.SingleThreadedEventHandlingStrategy;
 import quickfix.mina.acceptor.AbstractSocketAcceptor;
+
+import java.util.concurrent.Executor;
 
 /**
  * Accepts connections and uses a single thread to process messages for all
@@ -35,39 +36,39 @@ public class SocketAcceptor extends AbstractSocketAcceptor {
 
     public SocketAcceptor(Application application, MessageStoreFactory messageStoreFactory,
             SessionSettings settings, LogFactory logFactory, MessageFactory messageFactory,
-            int queueCapacity, IoAcceptor ioAcceptor)
+            int queueCapacity, Executor executor)
             throws ConfigError {
-        super(application, messageStoreFactory, settings, logFactory, messageFactory, ioAcceptor);
+        super(application, messageStoreFactory, settings, logFactory, messageFactory, executor);
         eventHandlingStrategy = new SingleThreadedEventHandlingStrategy(this, queueCapacity);
     }
 
     public SocketAcceptor(Application application, MessageStoreFactory messageStoreFactory,
-            SessionSettings settings, LogFactory logFactory, MessageFactory messageFactory, IoAcceptor ioAcceptor)
+            SessionSettings settings, LogFactory logFactory, MessageFactory messageFactory, Executor executor)
             throws ConfigError {
-        super(application, messageStoreFactory, settings, logFactory, messageFactory, ioAcceptor);
+        super(application, messageStoreFactory, settings, logFactory, messageFactory, executor);
         eventHandlingStrategy = new SingleThreadedEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 
     public SocketAcceptor(Application application, MessageStoreFactory messageStoreFactory,
-            SessionSettings settings, MessageFactory messageFactory, int queueCapacity, IoAcceptor ioAcceptor) throws ConfigError {
-        super(application, messageStoreFactory, settings, messageFactory, ioAcceptor);
+            SessionSettings settings, MessageFactory messageFactory, int queueCapacity, Executor executor) throws ConfigError {
+        super(application, messageStoreFactory, settings, messageFactory, executor);
         eventHandlingStrategy = new SingleThreadedEventHandlingStrategy(this, queueCapacity);
     }
 
     public SocketAcceptor(Application application, MessageStoreFactory messageStoreFactory,
-            SessionSettings settings, MessageFactory messageFactory, IoAcceptor ioAcceptor) throws ConfigError {
-        super(application, messageStoreFactory, settings, messageFactory, ioAcceptor);
+            SessionSettings settings, MessageFactory messageFactory, Executor executor) throws ConfigError {
+        super(application, messageStoreFactory, settings, messageFactory, executor);
         eventHandlingStrategy = new SingleThreadedEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 
     public SocketAcceptor(SessionFactory sessionFactory, SessionSettings settings,
-            int queueCapacity, IoAcceptor ioAcceptor) throws ConfigError {
-        super(settings, sessionFactory, ioAcceptor);
+            int queueCapacity, Executor executor) throws ConfigError {
+        super(settings, sessionFactory, executor);
         eventHandlingStrategy = new SingleThreadedEventHandlingStrategy(this, queueCapacity);
     }
 
-    public SocketAcceptor(SessionFactory sessionFactory, SessionSettings settings, IoAcceptor ioAcceptor) throws ConfigError {
-        super(settings, sessionFactory, ioAcceptor);
+    public SocketAcceptor(SessionFactory sessionFactory, SessionSettings settings, Executor executor) throws ConfigError {
+        super(settings, sessionFactory, executor);
         eventHandlingStrategy = new SingleThreadedEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 

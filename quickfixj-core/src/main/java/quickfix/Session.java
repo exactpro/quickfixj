@@ -1589,6 +1589,7 @@ public class Session implements Closeable {
                         + (field != 0 ? (": tag=" + field) : ""));
 
         sendRaw(reject, 0);
+        application.onMessageRejected(message, sessionID);
     }
 
     private void nextTestRequest(Message testRequest) throws FieldNotFound, RejectLogon,

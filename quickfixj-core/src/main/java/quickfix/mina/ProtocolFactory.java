@@ -21,9 +21,16 @@ package quickfix.mina;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.AbstractMap;
+import java.util.Map;
+import java.util.concurrent.Executor;
 
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.service.IoConnector;
+import org.apache.mina.core.service.IoProcessor;
+import org.apache.mina.core.service.SimpleIoProcessorPool;
+import org.apache.mina.transport.socket.nio.NioProcessor;
+import org.apache.mina.transport.socket.nio.NioSession;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.apache.mina.transport.vmpipe.VmPipeAcceptor;
@@ -45,19 +52,19 @@ public class ProtocolFactory {
 
     public static String getTypeString(int type) {
         switch (type) {
-        case SOCKET:
-            return "SOCKET";
-        case VM_PIPE:
-            return "VM_PIPE";
-        case PROXY:
-            return "PROXY";
-        default:
-            return "unknown";
+            case SOCKET:
+                return "SOCKET";
+            case VM_PIPE:
+                return "VM_PIPE";
+            case PROXY:
+                return "PROXY";
+            default:
+                return "unknown";
         }
     }
 
     public static SocketAddress createSocketAddress(int transportType, String host,
-            int port) throws ConfigError {
+                                                    int port) throws ConfigError {
         if (transportType == SOCKET) {
             return host != null ? new InetSocketAddress(host, port) : new InetSocketAddress(port);
         } else if (transportType == VM_PIPE) {
@@ -90,30 +97,26 @@ public class ProtocolFactory {
         }
     }
 
-    public static IoAcceptor createIoAcceptor(int transportType, IoAcceptor ioAcceptor) {
+    public static Map.Entry<IoAcceptor, IoProcessor> createIoAcceptor(int transportType, Executor executor) {
         if (transportType == SOCKET) {
-            if (ioAcceptor == null) {
-                ioAcceptor = new NioSocketAcceptor();
-            }
-            if(ioAcceptor instanceof NioSocketAcceptor) {
-                ((NioSocketAcceptor)ioAcceptor).setReuseAddress(true);
-            }
-            return ioAcceptor;
+            IoProcessor<NioSession> ioProcessor = new SimpleIoProcessorPool<NioSession>(NioProcessor.class, executor);
+            NioSocketAcceptor ret = new NioSocketAcceptor(executor, ioProcessor);
+            ret.setReuseAddress(true);
+            return new AbstractMap.SimpleEntry<IoAcceptor, IoProcessor>(ret, ioProcessor);
         } else if (transportType == VM_PIPE) {
-            return new VmPipeAcceptor();
+            return new AbstractMap.SimpleEntry<IoAcceptor, IoProcessor>(new VmPipeAcceptor(), null);
         } else {
             throw new RuntimeError("Unsupported transport type: " + transportType);
         }
     }
 
-    public static IoConnector createIoConnector(SocketAddress address, IoConnector ioConnector) throws ConfigError {
+    public static Map.Entry<IoConnector, IoProcessor> createIoConnector(SocketAddress address, Executor executor) throws ConfigError {
         if (address instanceof InetSocketAddress) {
-            if(ioConnector == null){
-                ioConnector = new NioSocketConnector();
-            }
-            return ioConnector;
+            IoProcessor<NioSession> ioProcessor = new SimpleIoProcessorPool<NioSession>(NioProcessor.class, executor);
+            IoConnector nioSocketConnector = new NioSocketConnector(executor, ioProcessor);
+            return new AbstractMap.SimpleEntry<IoConnector, IoProcessor>(nioSocketConnector, ioProcessor);
         } else if (address instanceof VmPipeAddress) {
-            return new VmPipeConnector();
+            return new AbstractMap.SimpleEntry<IoConnector, IoProcessor>(new VmPipeConnector(), null);
         } else {
             throw new ConfigError("Unknown session acceptor address type: "
                     + address.getClass().getName());

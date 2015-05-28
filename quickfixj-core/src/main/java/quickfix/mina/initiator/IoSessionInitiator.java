@@ -24,6 +24,8 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -31,9 +33,11 @@ import java.util.concurrent.TimeUnit;
 import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.service.IoConnector;
 import org.apache.mina.core.filterchain.IoFilterChainBuilder;
+import org.apache.mina.core.service.IoProcessor;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.ssl.SslFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.transport.socket.SocketConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,18 +55,18 @@ import quickfix.mina.ssl.SSLSupport;
 
 public class IoSessionInitiator {
     private final static long CONNECT_POLL_TIMEOUT = 2000L;
-    private final ScheduledExecutorService executor;
+    private final ScheduledExecutorService scheduledExecutorService;
     private final ConnectTask reconnectTask;
 
     private Future<?> reconnectFuture;
     protected final static Logger log = LoggerFactory.getLogger("display." + IoSessionInitiator.class.getName());
 
     public IoSessionInitiator(Session fixSession, SocketAddress[] socketAddresses, SocketAddress localAddress,
-            int[] reconnectIntervalInSeconds, ScheduledExecutorService executor,
+            int[] reconnectIntervalInSeconds, ScheduledExecutorService scheduledExecutorService,
             NetworkingOptions networkingOptions, EventHandlingStrategy eventHandlingStrategy,
             IoFilterChainBuilder userIoFilterChainBuilder, boolean sslEnabled, String keyStoreName,
-            String keyStorePassword, String[] enableProtocole, String[] cipherSuites, IoConnector ioConnector) throws ConfigError {
-        this.executor = executor;
+            String keyStorePassword, String[] enableProtocole, String[] cipherSuites, Executor executor) throws ConfigError {
+        this.scheduledExecutorService = scheduledExecutorService;
         final long[] reconnectIntervalInMillis = new long[reconnectIntervalInSeconds.length];
         for (int ii = 0; ii != reconnectIntervalInSeconds.length; ++ii) {
             reconnectIntervalInMillis[ii] = reconnectIntervalInSeconds[ii] * 1000L;
@@ -70,7 +74,7 @@ public class IoSessionInitiator {
         try {
             reconnectTask = new ConnectTask(sslEnabled, socketAddresses, localAddress, userIoFilterChainBuilder,
                     fixSession, reconnectIntervalInMillis, networkingOptions,
-                    eventHandlingStrategy, keyStoreName, keyStorePassword, enableProtocole, cipherSuites, ioConnector);
+                    eventHandlingStrategy, keyStoreName, keyStorePassword, enableProtocole, cipherSuites, executor);
         } catch (GeneralSecurityException e) {
             throw new ConfigError(e);
         }
@@ -81,6 +85,7 @@ public class IoSessionInitiator {
         private final SocketAddress[] socketAddresses;
         private final SocketAddress localAddress;
         private final IoConnector ioConnector;
+        private final IoProcessor ioProcessor;
         private final Session fixSession;
         private final long[] reconnectIntervalInMillis;
         private final String keyStoreName;
@@ -100,7 +105,7 @@ public class IoSessionInitiator {
                 SocketAddress localAddress, IoFilterChainBuilder userIoFilterChainBuilder, Session fixSession,
                 long[] reconnectIntervalInMillis, NetworkingOptions networkingOptions,
                 EventHandlingStrategy eventHandlingStrategy, String keyStoreName,
-                String keyStorePassword, String[] enableProtocole, String[] cipherSuites, IoConnector ioConnector) throws ConfigError, GeneralSecurityException {
+                String keyStorePassword, String[] enableProtocole, String[] cipherSuites, Executor executor) throws ConfigError, GeneralSecurityException {
             this.socketAddresses = socketAddresses;
             this.localAddress = localAddress;
             this.fixSession = fixSession;
@@ -109,7 +114,9 @@ public class IoSessionInitiator {
             this.keyStorePassword = keyStorePassword;
             this.enableProtocole = enableProtocole;
             this.cipherSuites = cipherSuites;
-            this.ioConnector = ProtocolFactory.createIoConnector(socketAddresses[0], ioConnector);
+            Map.Entry<IoConnector, IoProcessor> entry = ProtocolFactory.createIoConnector(socketAddresses[0], executor);
+            this.ioConnector = entry.getKey();
+            this.ioProcessor = entry.getValue();
             CompositeIoFilterChainBuilder ioFilterChainBuilder = new CompositeIoFilterChainBuilder(
                     userIoFilterChainBuilder);
 
@@ -120,7 +127,7 @@ public class IoSessionInitiator {
             ioFilterChainBuilder.addLast(FIXProtocolCodecFactory.FILTER_NAME,
                     new ProtocolCodecFilter(new FIXProtocolCodecFactory()));
 
-            ioConnector.setFilterChainBuilder(ioFilterChainBuilder);
+            this.ioConnector.setFilterChainBuilder(ioFilterChainBuilder);
             ioHandler = new InitiatorIoHandler(fixSession, networkingOptions,
                     eventHandlingStrategy);
         }
@@ -235,6 +242,16 @@ public class IoSessionInitiator {
             return SystemTime.currentTimeMillis() - lastReconnectAttemptTime >= computeNextRetryConnectDelay();
         }
 
+        public void close(){
+            if(ioConnector instanceof SocketConnector){
+                SocketConnector socketConnector = (SocketConnector)ioConnector;
+                socketConnector.dispose();
+                if(ioProcessor != null){
+                    ioProcessor.dispose();
+                }
+            }
+        }
+
         // TODO JMX Expose reconnect property
 
         @SuppressWarnings("unused") // exposed via JMX
@@ -262,7 +279,7 @@ public class IoSessionInitiator {
             // The following logon reenabled the session. The actual logon will take
             // place as a side-effect of the session timer task (not the reconnect task).
             reconnectTask.getFixSession().logon(); // only enables the session
-            reconnectFuture = executor
+            reconnectFuture = scheduledExecutorService
                     .scheduleWithFixedDelay(reconnectTask, 0, 1, TimeUnit.SECONDS);
         }
     }
@@ -272,5 +289,6 @@ public class IoSessionInitiator {
             reconnectFuture.cancel(true);
             reconnectFuture = null;
         }
+        reconnectTask.close();
     }
 }

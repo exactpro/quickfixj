@@ -19,10 +19,11 @@
 
 package quickfix;
 
-import org.apache.mina.core.service.IoConnector;
 import quickfix.mina.EventHandlingStrategy;
 import quickfix.mina.ThreadPerSessionEventHandlingStrategy;
 import quickfix.mina.initiator.AbstractSocketInitiator;
+
+import java.util.concurrent.Executor;
 
 /**
  * Initiates connections and uses a separate thread per session to process messages.
@@ -32,43 +33,43 @@ public class ThreadedSocketInitiator extends AbstractSocketInitiator {
 
     public ThreadedSocketInitiator(Application application,
             MessageStoreFactory messageStoreFactory, SessionSettings settings,
-            LogFactory logFactory, MessageFactory messageFactory, int queueCapacity, IoConnector ioConnector) throws ConfigError {
-        super(application, messageStoreFactory, settings, logFactory, messageFactory, ioConnector);
+            LogFactory logFactory, MessageFactory messageFactory, int queueCapacity, Executor executor) throws ConfigError {
+        super(application, messageStoreFactory, settings, logFactory, messageFactory, executor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, queueCapacity);
     }
 
     public ThreadedSocketInitiator(Application application,
             MessageStoreFactory messageStoreFactory, SessionSettings settings,
-            LogFactory logFactory, MessageFactory messageFactory, IoConnector ioConnector) throws ConfigError {
-        super(application, messageStoreFactory, settings, logFactory, messageFactory, ioConnector);
+            LogFactory logFactory, MessageFactory messageFactory, Executor executor) throws ConfigError {
+        super(application, messageStoreFactory, settings, logFactory, messageFactory, executor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 
     public ThreadedSocketInitiator(Application application,
             MessageStoreFactory messageStoreFactory, SessionSettings settings,
-            MessageFactory messageFactory, int queueCapacity, IoConnector ioConnector) throws ConfigError {
+            MessageFactory messageFactory, int queueCapacity, Executor executor) throws ConfigError {
         super(application, messageStoreFactory, settings, new ScreenLogFactory(settings),
-                messageFactory, ioConnector);
+                messageFactory, executor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, queueCapacity);
     }
 
     public ThreadedSocketInitiator(Application application,
             MessageStoreFactory messageStoreFactory, SessionSettings settings,
-            MessageFactory messageFactory, IoConnector ioConnector) throws ConfigError {
+            MessageFactory messageFactory, Executor executor) throws ConfigError {
         super(application, messageStoreFactory, settings, new ScreenLogFactory(settings),
-                messageFactory, ioConnector);
+                messageFactory, executor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 
-    public ThreadedSocketInitiator(SessionFactory sessionFactory, SessionSettings settings, int queueCapacity, IoConnector ioConnector)
+    public ThreadedSocketInitiator(SessionFactory sessionFactory, SessionSettings settings, int queueCapacity, Executor executor)
             throws ConfigError {
-        super(settings, sessionFactory, ioConnector);
+        super(settings, sessionFactory, executor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, queueCapacity);
     }
 
-    public ThreadedSocketInitiator(SessionFactory sessionFactory, SessionSettings settings, IoConnector ioConnector)
+    public ThreadedSocketInitiator(SessionFactory sessionFactory, SessionSettings settings, Executor executor)
             throws ConfigError {
-        super(settings, sessionFactory, ioConnector);
+        super(settings, sessionFactory, executor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 

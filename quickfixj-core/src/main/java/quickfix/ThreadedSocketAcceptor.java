@@ -19,10 +19,11 @@
 
 package quickfix;
 
-import org.apache.mina.core.service.IoAcceptor;
 import quickfix.mina.EventHandlingStrategy;
 import quickfix.mina.ThreadPerSessionEventHandlingStrategy;
 import quickfix.mina.acceptor.AbstractSocketAcceptor;
+
+import java.util.concurrent.Executor;
 
 /**
  * Accepts connections and uses a separate thread per session to process messages.
@@ -32,41 +33,41 @@ public class ThreadedSocketAcceptor extends AbstractSocketAcceptor {
 
     public ThreadedSocketAcceptor(Application application, MessageStoreFactory messageStoreFactory,
                                   SessionSettings settings, LogFactory logFactory, MessageFactory messageFactory,
-                                  int queueCapacity, IoAcceptor ioAcceptor)
+                                  int queueCapacity, Executor executor)
                                   throws ConfigError {
-        super(application, messageStoreFactory, settings, logFactory, messageFactory, ioAcceptor);
+        super(application, messageStoreFactory, settings, logFactory, messageFactory, executor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, queueCapacity);
     }
 
     public ThreadedSocketAcceptor(Application application, MessageStoreFactory messageStoreFactory,
-            SessionSettings settings, LogFactory logFactory, MessageFactory messageFactory, IoAcceptor ioAcceptor)
+            SessionSettings settings, LogFactory logFactory, MessageFactory messageFactory, Executor executor)
             throws ConfigError {
-        super(application, messageStoreFactory, settings, logFactory, messageFactory, ioAcceptor);
+        super(application, messageStoreFactory, settings, logFactory, messageFactory, executor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 
     public ThreadedSocketAcceptor(Application application, MessageStoreFactory messageStoreFactory,
                                   SessionSettings settings, MessageFactory messageFactory,
-                                  int queueCapacity, IoAcceptor ioAcceptor) throws ConfigError {
-        super(application, messageStoreFactory, settings, messageFactory, ioAcceptor);
+                                  int queueCapacity, Executor executor) throws ConfigError {
+        super(application, messageStoreFactory, settings, messageFactory, executor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, queueCapacity);
     }
 
     public ThreadedSocketAcceptor(Application application, MessageStoreFactory messageStoreFactory,
-            SessionSettings settings, MessageFactory messageFactory, IoAcceptor ioAcceptor) throws ConfigError {
-        super(application, messageStoreFactory, settings, messageFactory, ioAcceptor);
+            SessionSettings settings, MessageFactory messageFactory, Executor executor) throws ConfigError {
+        super(application, messageStoreFactory, settings, messageFactory, executor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 
-    public ThreadedSocketAcceptor(SessionFactory sessionFactory, SessionSettings settings, int queueCapacity, IoAcceptor ioAcceptor)
+    public ThreadedSocketAcceptor(SessionFactory sessionFactory, SessionSettings settings, int queueCapacity, Executor executor)
             throws ConfigError {
-        super(settings, sessionFactory, ioAcceptor);
+        super(settings, sessionFactory, executor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, queueCapacity);
     }
 
-    public ThreadedSocketAcceptor(SessionFactory sessionFactory, SessionSettings settings, IoAcceptor ioAcceptor)
+    public ThreadedSocketAcceptor(SessionFactory sessionFactory, SessionSettings settings, Executor executor)
             throws ConfigError {
-        super(settings, sessionFactory, ioAcceptor);
+        super(settings, sessionFactory, executor);
         eventHandlingStrategy = new ThreadPerSessionEventHandlingStrategy(this, DEFAULT_QUEUE_CAPACITY);
     }
 
