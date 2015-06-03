@@ -156,6 +156,10 @@ public class DynamicAcceptorSessionProvider implements AcceptorSessionProvider {
         return s;
     }
 
+    public SessionSettings getSettings() {
+        return settings;
+    }
+
     protected void optionallySetValue(SessionSettings dynamicSettings, String key, String value) {
         dynamicSettings.setString(key, value);
     }

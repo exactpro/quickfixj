@@ -22,14 +22,11 @@ package quickfix.mina.acceptor;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.List;
 
 import org.apache.mina.core.session.IoSession;
 
-import quickfix.Log;
-import quickfix.Message;
-import quickfix.MessageUtils;
-import quickfix.Session;
-import quickfix.SessionID;
+import quickfix.*;
 import quickfix.field.ApplVerID;
 import quickfix.field.DefaultApplVerID;
 import quickfix.field.HeartBtInt;
@@ -55,6 +52,27 @@ class AcceptorIoHandler extends AbstractIoHandler {
     @Override
     public void sessionCreated(IoSession session) throws Exception {
         super.sessionCreated(session);
+        int receiveLimit = 0;
+        if (sessionProvider instanceof DynamicAcceptorSessionProvider)
+        {
+            SessionSettings settings = ((DynamicAcceptorSessionProvider)sessionProvider).getSettings();
+            try {
+                receiveLimit = (int)settings.getLong(Session.RECEIVE_LIMIT);
+            } catch (FieldConvertError e) {
+                // ignore
+            }
+        } else if (sessionProvider instanceof AbstractSocketAcceptor.StaticAcceptorSessionProvider) {
+            receiveLimit = ((AbstractSocketAcceptor.StaticAcceptorSessionProvider)sessionProvider).getReceiveLimit();
+        } else {
+            List<SessionID> sessionList = eventHandlingStrategy.getSessionConnector().getSessions();
+            if(!sessionList.isEmpty()){
+                SessionID firstSessionId = sessionList.iterator().next();
+                Session firstSession = sessionProvider.getSession(firstSessionId, null);
+                receiveLimit = firstSession.getReceiveLimit();
+            }
+        }
+        session.setReceiveLimit(receiveLimit);
+        log.info("receiveLimit: " + receiveLimit);
         log.info("MINA session created: " + "local=" + session.getLocalAddress() + ", "
                 + session.getClass() + ", remote=" + session.getRemoteAddress());
     }

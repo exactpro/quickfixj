@@ -342,6 +342,10 @@ public abstract class AbstractSocketAcceptor extends SessionConnector implements
         public Session getSession(SessionID sessionID, SessionConnector connector) {
             return acceptorSessions.get(sessionID);
         }
+
+        public int getReceiveLimit() {
+            return acceptorSessions.values().iterator().next().getReceiveLimit();
+        }
     }
 
     public int getQueueSize() {

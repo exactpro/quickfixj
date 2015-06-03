@@ -347,6 +347,8 @@ public class Session implements Closeable {
      */
     public static final String SETTING_RESEND_REQUEST_CHUNK_SIZE = "ResendRequestChunkSize";
 
+    public static final String RECEIVE_LIMIT = "ReceiveLimit";
+
     private static final ConcurrentMap<SessionID, Session> sessions = new ConcurrentHashMap<SessionID, Session>();
 
     private final Application application;
@@ -407,6 +409,7 @@ public class Session implements Closeable {
 
     private boolean duplicateTagsAllowed = false;
     private boolean ignoreAbsenceOf141tag = false;
+    private int receiveLimit = 0;
     public static final int DEFAULT_MAX_LATENCY = 120;
     public static final int DEFAULT_RESEND_RANGE_CHUNK_SIZE = 0; // no resend range
     public static final double DEFAULT_TEST_REQUEST_DELAY_MULTIPLIER = 0.5;
@@ -2540,14 +2543,23 @@ public class Session implements Closeable {
     public boolean send(String messageString) {
         getLog().onOutgoing(messageString);
         Responder responder;
-        synchronized (responderLock) {
-            responder = this.responder;
+        if (receiveLimit == 0) {
+            synchronized (responderLock) {
+                responder = this.responder;
+            }
+            if (responder == null) {
+                getLog().onEvent("No responder, not sending message: " + messageString);
+                return false;
+            }
+            return responder.send(messageString);
+        } else {
+            getLog().onEvent("ignore responderSync");
+            if (!hasResponder()) {
+                getLog().onEvent("No responder, not sending message: " + messageString);
+                return false;
+            }
+            return getResponder().send(messageString);
         }
-        if (responder == null) {
-            getLog().onEvent("No responder, not sending message: " + messageString);
-            return false;
-        }
-        return responder.send(messageString);
     }
 
     private boolean isCorrectCompID(Message message) throws FieldNotFound {
@@ -2857,6 +2869,14 @@ public class Session implements Closeable {
 
     public boolean isDuplicateTagsAllowed() {
         return duplicateTagsAllowed;
+    }
+
+    public int getReceiveLimit() {
+        return receiveLimit;
+    }
+
+    public void setReceiveLimit(int receiveLimit) {
+        this.receiveLimit = receiveLimit;
     }
 
 }
