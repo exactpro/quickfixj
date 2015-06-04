@@ -18,13 +18,19 @@ buildscript {
     }
 }
 
+ext.sharedDir = file('../../shared')
+
 repositories {
     maven {
-        url 'http://arti.exactpro.com/libs-release'
+        name 'MavenLocal' // for local builds only
+        url sharedDir
+    }
+    maven {
+        name 'Artifactory'
+        url 'http://arti.exactpro.com/libs-snapshot'
     }
 }
 
-ext.sharedDir = file('../../shared')
 test.enabled = false
 compileTestJava.enabled = false
 
@@ -63,7 +69,7 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.2'
     compile 'org.slf4j:slf4j-log4j12:1.7.2'
     compile 'log4j:log4j:1.2.17'
-    compile 'org.apache.mina:mina-core:2.0.9'
+    compile 'com.exactprosystems.testtools:apache-mina-core:2.0.9-SNAPSHOT'
     compile 'com.cloudhopper.proxool:proxool:0.9.1'
     compile 'org.apache.avalon.framework:avalon-framework-api:4.3.1'
     compile 'org.slf4j:jcl-over-slf4j:1.7.12'
