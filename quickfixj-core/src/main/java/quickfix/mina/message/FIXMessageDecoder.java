@@ -427,7 +427,7 @@ public class FIXMessageDecoder implements MessageDecoder {
 
     private static byte[] getBytes(String s) {
         try {
-            return s.getBytes(CharsetSupport.getDefaultCharset());
+            return s.getBytes(CharsetSupport.getCharset());
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }

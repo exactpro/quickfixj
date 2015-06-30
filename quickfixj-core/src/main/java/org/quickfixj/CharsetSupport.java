@@ -30,7 +30,7 @@ public class CharsetSupport {
     private static String charset = getDefaultCharset();
     private static Charset charsetInstance = Charset.forName(charset);
 
-    public static String getDefaultCharset() {
+    protected static String getDefaultCharset() {
         return "ISO-8859-1";
     }
 
