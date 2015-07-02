@@ -64,6 +64,7 @@ public class DataDictionary {
     public static final String ANY_VALUE = "__ANY__";
     public static final String HEADER_ID = "HEADER";
     public static final String TRAILER_ID = "TRAILER";
+    protected static final String ALLOW_OTHER_VALUES_ATTRIBUTE = "allowOtherValues";
     private static final String MESSAGE_CATEGORY_ADMIN = "admin".intern();
     private static final String MESSAGE_CATEGORY_APP = "app".intern();
 
@@ -976,7 +977,7 @@ public class DataDictionary {
                 }
 
                 if (fieldValues.containsKey(num)) {
-                    final String allowOtherValues = getAttribute(fieldNode, "allowOtherValues");
+                    final String allowOtherValues = getAttribute(fieldNode, ALLOW_OTHER_VALUES_ATTRIBUTE);
                     if (allowOtherValues != null && Boolean.parseBoolean(allowOtherValues)) {
                         addFieldValue(num, ANY_VALUE);
                     }
