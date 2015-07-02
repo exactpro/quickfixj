@@ -91,6 +91,8 @@ public class DataDictionary {
     private final Map<IntStringPair, GroupInfo> groups = new HashMap<IntStringPair, GroupInfo>();
     private final Map<String, Node> components = new HashMap<String, Node>();
 
+    private DataDictionary delegate;
+
     public DataDictionary() {
     }
 
@@ -120,6 +122,7 @@ public class DataDictionary {
      * @param source the source dictionary that will be copied into this dictionary
      */
     public DataDictionary(DataDictionary source) {
+        this.delegate = source;
         copyFrom(source);
     }
 
@@ -155,7 +158,11 @@ public class DataDictionary {
      * @return the field name
      */
     public String getFieldName(int field) {
-        return fieldNames.get(field);
+        if(fieldNames.isEmpty() && delegate != null){
+            return delegate.getFieldName(field);
+        } else {
+            return fieldNames.get(field);
+        }
     }
 
     private void addValueName(int field, String value, String name) {
@@ -170,7 +177,11 @@ public class DataDictionary {
      * @return the value's name
      */
     public String getValueName(int field, String value) {
-        return valueNames.get(new IntStringPair(field, value));
+        if(valueNames.isEmpty() && delegate != null){
+            return delegate.getValueName(field, value);
+        } else {
+            return valueNames.get(new IntStringPair(field, value));
+        }
     }
 
     /**
@@ -190,7 +201,11 @@ public class DataDictionary {
      * @return the field type
      */
     public FieldType getFieldTypeEnum(int field) {
-        return fieldTypes.get(field);
+        if(fieldTypes.isEmpty() && delegate != null){
+            return delegate.getFieldTypeEnum(field);
+        } else {
+            return fieldTypes.get(field);
+        }
     }
 
     private void addMsgType(String msgType, String msgName) {
@@ -310,8 +325,12 @@ public class DataDictionary {
      * @return the tag
      */
     public int getFieldTag(String name) {
-        final Integer tag = names.get(name);
-        return tag != null ? tag : -1;
+        if(names.isEmpty() && delegate != null){
+            return delegate.getFieldTag(name);
+        } else {
+            final Integer tag = names.get(name);
+            return tag != null ? tag : -1;
+        }
     }
 
     private void addRequiredField(String msgType, int field) {
@@ -451,11 +470,19 @@ public class DataDictionary {
      * @return true if field is a raw data field, false otherwise
      */
     public boolean isDataField(int field) {
-        return fieldTypes.get(field) == FieldType.Data;
+        if(fieldTypes.isEmpty() && delegate != null){
+            return delegate.getFieldTypeEnum(field) == FieldType.Data;
+        } else {
+            return fieldTypes.get(field) == FieldType.Data;
+        }
     }
 
     private boolean isMultipleValueStringField(int field) {
-        return fieldTypes.get(field) == FieldType.MultipleValueString;
+        if(fieldTypes.isEmpty() && delegate != null){
+            return delegate.getFieldTypeEnum(field) == FieldType.MultipleValueString;
+        } else {
+            return fieldTypes.get(field) == FieldType.MultipleValueString;
+        }
     }
 
     /**
@@ -519,23 +546,18 @@ public class DataDictionary {
     }
 
     private void copyFrom(DataDictionary rhs) {
-        hasVersion = rhs.hasVersion;
-        beginString = rhs.beginString;
-        checkFieldsOutOfOrder = rhs.checkFieldsOutOfOrder;
-        checkFieldsHaveValues = rhs.checkFieldsHaveValues;
-        checkUserDefinedFields = rhs.checkUserDefinedFields;
+        hasVersion = rhs.hasVersion();
+        beginString = rhs.getBeginString();
+        checkFieldsOutOfOrder = rhs.isCheckFieldsOutOfOrder();
+        checkFieldsHaveValues = rhs.isCheckFieldsHaveValues();
+        checkUserDefinedFields = rhs.isCheckUserDefinedFields();
 
-        copyMap(messageFields, rhs.messageFields);
-        copyMap(requiredFields, rhs.requiredFields);
-        copyCollection(messages, rhs.messages);
-        copyCollection(fields, rhs.fields);
-        copyMap(fieldTypes, rhs.fieldTypes);
-        copyMap(fieldValues, rhs.fieldValues);
-        copyMap(fieldNames, rhs.fieldNames);
-        copyMap(names, rhs.names);
-        copyMap(valueNames, rhs.valueNames);
-        copyMap(groups, rhs.groups);
-        copyMap(components, rhs.components);
+        copyMap(messageFields, rhs.getMessageFields());
+        copyMap(requiredFields, rhs.getRequiredFields());
+        copyCollection(messages, rhs.getMessages());
+        copyCollection(fields, rhs.getFields());
+        copyMap(fieldValues, rhs.getFieldValues());
+        copyMap(groups, rhs.getGroups());
     }
 
     @SuppressWarnings("unchecked")
@@ -1110,7 +1132,12 @@ public class DataDictionary {
     }
 
     private int lookupXMLFieldNumber(Document document, String name) throws ConfigError {
-        final Integer fieldNumber = names.get(name);
+        final Integer fieldNumber;
+        if(names.isEmpty() && delegate != null){
+            fieldNumber = delegate.getFieldTag(name);
+        } else {
+            fieldNumber = names.get(name);
+        }
         if (fieldNumber == null) {
             throw new ConfigError("Field " + name + " not defined in fields section");
         }
@@ -1224,6 +1251,10 @@ public class DataDictionary {
             return namedItem != null ? namedItem.getNodeValue() : null;
         }
         return defaultValue;
+    }
+
+    public Map<IntStringPair, GroupInfo> getGroups() {
+        return groups;
     }
 
     /**
