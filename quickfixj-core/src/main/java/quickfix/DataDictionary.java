@@ -626,19 +626,23 @@ public class DataDictionary {
     }
 
     public Map<String, Set<Integer>> getMessageFields() {
-        throw new UnsupportedOperationException();
+       return messageFields;
     }
 
     public Map<String, Set<Integer>> getRequiredFields() {
-        throw new UnsupportedOperationException();
+        return requiredFields;
     }
 
     public Set<String> getMessages() {
-        throw new UnsupportedOperationException();
+        return this.messages;
+    }
+
+    public Set<String> getMessageNames() {
+        return this.messageTypeForName.keySet();
     }
 
     public Set<Integer> getFields(){
-        throw new UnsupportedOperationException();
+        return this.fields;
     }
 
     public boolean hasVersion() {
