@@ -92,7 +92,7 @@ public class SessionTest {
                 new DefaultMessageFactory(), 30, false, 30, true, true, false,
                 false, false, false, false, true, false, 1.5, null, true,
                 new int[] { 5 }, false, false, false, true, false, true, false,
-                null, true, 0, false, false);
+                null, true, 0, false, false, true, true);
 
         // Simulate socket disconnect
         session.setResponder(null);
@@ -135,7 +135,7 @@ public class SessionTest {
                 new DefaultMessageFactory(), 30, false, 30, true, true, false,
                 false, false, false, false, true, false, 1.5, null, true,
                 new int[] { 5 }, false, false, false, true, false, true, false,
-                null, true, 0, false, false);
+                null, true, 0, false, false, true, true);
 
         // Simulate socket disconnect
         session.setResponder(null);
@@ -1812,7 +1812,7 @@ public class SessionTest {
                 true, resetOnLogon, false, false, false, false, false, true,
                 false, 1.5, null, validateSequenceNumbers, new int[] { 5 },
                 false, false, false, true, false, true, false, null, true,
-                chunkSize, false, false);
+                chunkSize, false, false, true, true);
 
         UnitTestResponder responder = new UnitTestResponder();
         session.setResponder(responder);
@@ -1878,7 +1878,7 @@ public class SessionTest {
                 true, resetOnLogon, false, false, false, false, false, true,
                 false, 1.5, null, validateSequenceNumbers, new int[] { 5 },
                 false, disconnectOnError, false, true, false, true, false,
-                null, true, 0, false, false);
+                null, true, 0, false, false, true, true);
 
         UnitTestResponder responder = new UnitTestResponder();
         session.setResponder(responder);
@@ -1935,7 +1935,7 @@ public class SessionTest {
                 new DefaultMessageFactory(), isInitiator ? 30 : 0, false, 30, true, resetOnLogon,
                 false, false, false, false, false, true, false, 1.5, null, validateSequenceNumbers,
                 new int[]{5}, false, false, false, true, false, true, false, null, true, 0,
-                false, false);
+                false, false, true, true);
 
         UnitTestResponder responder = new UnitTestResponder();
         session.setResponder(responder);

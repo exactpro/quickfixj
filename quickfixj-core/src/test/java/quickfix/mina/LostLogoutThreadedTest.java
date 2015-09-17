@@ -103,7 +103,7 @@ public class LostLogoutThreadedTest {
             settings.setString(sid, "TargetCompID", sid.getTargetCompID());
 
             acceptor = new ThreadedSocketAcceptor(this, new MemoryStoreFactory(), settings,
-                    new ScreenLogFactory(), new DefaultMessageFactory());
+                    new ScreenLogFactory(), new DefaultMessageFactory(), null);
             acceptor.start();
             Thread.sleep(1000);
         }
@@ -156,6 +156,9 @@ public class LostLogoutThreadedTest {
         void shutdown() throws Exception {
             acceptor.stop(true);
         }
+
+        @Override
+        public void onMessageRejected(Message message, SessionID sessionID) {}
     }
 
     /*
@@ -180,7 +183,7 @@ public class LostLogoutThreadedTest {
             settings.setString(sid, "TargetCompID", sid.getTargetCompID());
 
             initiator = new ThreadedSocketInitiator(this, new MemoryStoreFactory(), settings,
-                    new ScreenLogFactory(), new DefaultMessageFactory());
+                    new ScreenLogFactory(), new DefaultMessageFactory(), null);
             initiator.start();
             session = Session.lookupSession(sid);
         }
@@ -239,5 +242,8 @@ public class LostLogoutThreadedTest {
         void shutdown() throws Exception {
             initiator.stop(true);
         }
+
+        @Override
+        public void onMessageRejected(Message message, SessionID sessionID) {}
     }
 }

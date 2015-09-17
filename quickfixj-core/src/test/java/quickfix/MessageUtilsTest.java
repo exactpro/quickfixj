@@ -173,7 +173,7 @@ public class MessageUtilsTest extends TestCase {
         Message message = MessageUtils.parse(mockSession, email.toString());
 
         assertThat(message, is(notNullValue()));
-        assertThat(message, is(quickfix.fix40.Email.class));
+        assertThat((quickfix.fix40.Email)message, is(quickfix.fix40.Email.class));
     }
 
     public void testParseFixtLogon() throws Exception {
@@ -188,7 +188,7 @@ public class MessageUtilsTest extends TestCase {
         Message message = MessageUtils.parse(mockSession, logon.toString());
 
         assertThat(message, is(notNullValue()));
-        assertThat(message, is(quickfix.fixt11.Logon.class));
+        assertThat((quickfix.fixt11.Logon)message, is(quickfix.fixt11.Logon.class));
     }
 
     public void testParseFix50() throws Exception {
@@ -205,6 +205,6 @@ public class MessageUtilsTest extends TestCase {
         Message message = MessageUtils.parse(mockSession, email.toString());
 
         assertThat(message, is(notNullValue()));
-        assertThat(message, is(quickfix.fix50.Email.class));
+        assertThat((quickfix.fix50.Email)message, is(quickfix.fix50.Email.class));
     }
 }

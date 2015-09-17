@@ -119,7 +119,7 @@ public class ResynchTestServer extends MessageCracker implements Application, Ru
             MessageStoreFactory factory = new MemoryStoreFactory();
 
             acceptor = new SocketAcceptor(this, factory, settings, new ScreenLogFactory(settings),
-                    new DefaultMessageFactory());
+                    new DefaultMessageFactory(), null);
             acceptor.start();
 
             try {
@@ -170,4 +170,7 @@ public class ResynchTestServer extends MessageCracker implements Application, Ru
     public boolean isUnsynchMode() {
         return unsynchMode;
     }
+
+    @Override
+    public void onMessageRejected(Message message, SessionID sessionId) {}
 }

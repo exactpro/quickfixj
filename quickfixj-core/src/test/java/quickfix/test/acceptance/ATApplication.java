@@ -94,4 +94,7 @@ public class ATApplication implements Application {
         assertNoSessionLock(sessionID);
         inboundCracker.crack(message, sessionID);
     }
+
+    @Override
+    public void onMessageRejected(Message message, SessionID sessionID) {}
 }

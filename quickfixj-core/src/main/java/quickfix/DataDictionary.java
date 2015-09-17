@@ -614,15 +614,15 @@ public class DataDictionary {
     }
 
     public Map<Integer, Set<String>> getFieldValues(){
-        throw new UnsupportedOperationException();
+        return fieldValues;
     }
 
     public boolean isCheckFieldsHaveValues() {
-        throw new UnsupportedOperationException();
+        return checkFieldsHaveValues;
     }
 
     public boolean isCheckUserDefinedFields() {
-        throw new UnsupportedOperationException();
+        return checkUserDefinedFields;
     }
 
     public Map<String, Set<Integer>> getMessageFields() {
@@ -646,11 +646,11 @@ public class DataDictionary {
     }
 
     public boolean hasVersion() {
-        throw new UnsupportedOperationException();
+        return hasVersion;
     }
 
     public String getBeginString() {
-        throw new UnsupportedOperationException();
+        return beginString;
     }
 
     public String getMessageName(String msgType) {

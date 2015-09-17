@@ -133,4 +133,6 @@ public class UnitTestApplication implements ApplicationExtended, SessionStateLis
     public void onHeartBeatTimeout() {
     }
 
+    public void onMessageRejected(Message message, SessionID sessionId) {}
+
 }

@@ -70,7 +70,7 @@ public class SocketInitiatorTest {
             SessionSettings settings = getClientSessionSettings(clientSessionID);
             ClientApplication clientApplication = new ClientApplication();
             ThreadedSocketInitiator initiator = new ThreadedSocketInitiator(clientApplication,
-                    new MemoryStoreFactory(), settings, new DefaultMessageFactory());
+                    new MemoryStoreFactory(), settings, new DefaultMessageFactory(), null);
             initiator.setIoFilterChainBuilder(new IoFilterChainBuilder() {
                 public void buildFilterChain(IoFilterChain chain) throws Exception {
                     chain.addLast("TestFilter", initiatorWriteCounter);
@@ -122,7 +122,7 @@ public class SocketInitiatorTest {
             SessionSettings settings = getClientSessionSettings(clientSessionID);
             ClientApplication clientApplication = new ClientApplication();
             final SocketInitiator initiator = new SocketInitiator(clientApplication,
-                    new MemoryStoreFactory(), settings, new DefaultMessageFactory());
+                    new MemoryStoreFactory(), settings, new DefaultMessageFactory(), null);
             try {
                 clientApplication.stopAfterLogon(initiator);
                 clientApplication.setUpLogonExpectation();
@@ -145,7 +145,7 @@ public class SocketInitiatorTest {
         SessionSettings settings = getClientSessionSettings(clientSessionID);
         ClientApplication clientApplication = new ClientApplication();
         Initiator initiator = new SocketInitiator(clientApplication, new MemoryStoreFactory(),
-                settings, new DefaultMessageFactory());
+                settings, new DefaultMessageFactory(), null);
 
         doTestOfRestart(clientSessionID, clientApplication, initiator, null);
     }
@@ -167,7 +167,7 @@ public class SocketInitiatorTest {
         settings.setString("ResetOnLogon", "Y");
         FileLogFactory logFactory = new FileLogFactory(settings);
         Initiator initiator = new SocketInitiator(clientApplication, new MemoryStoreFactory(),
-                settings, logFactory, new DefaultMessageFactory());
+                settings, logFactory, new DefaultMessageFactory(), null);
         doTestOfRestart(clientSessionID, clientApplication, initiator, messageLog);
 
         messageLog.delete();
@@ -180,7 +180,7 @@ public class SocketInitiatorTest {
         SessionSettings settings = getClientSessionSettings(clientSessionID);
         ClientApplication clientApplication = new ClientApplication();
         Initiator initiator = new ThreadedSocketInitiator(clientApplication,
-                new MemoryStoreFactory(), settings, new DefaultMessageFactory());
+                new MemoryStoreFactory(), settings, new DefaultMessageFactory(), null);
 
         doTestOfRestart(clientSessionID, clientApplication, initiator, null);
     }
@@ -195,7 +195,7 @@ public class SocketInitiatorTest {
             SessionSettings settings = getClientSessionSettings(clientSessionID);
             ClientApplication clientApplication = new ClientApplication();
             initiator = new SocketInitiator(clientApplication,
-                    new MemoryStoreFactory(), settings, new DefaultMessageFactory());
+                    new MemoryStoreFactory(), settings, new DefaultMessageFactory(), null);
             initiator.start();
             initiator.start();
             ThreadInfo[] dumpAllThreads = bean.dumpAllThreads(false, false);

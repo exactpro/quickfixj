@@ -43,7 +43,7 @@ public class LoginTestCase {
                     SessionID sessionID = settings.sectionIterator().next();
                     SocketInitiator initiator = new SocketInitiator(new TestApplication(sessionID),
                             new FileStoreFactory(settings), settings,
-                            new ScreenLogFactory(settings), new DefaultMessageFactory());
+                            new ScreenLogFactory(settings), new DefaultMessageFactory(), null);
 
                     System.out.println(senderCompID + ": starting initiator");
                     initiator.start();

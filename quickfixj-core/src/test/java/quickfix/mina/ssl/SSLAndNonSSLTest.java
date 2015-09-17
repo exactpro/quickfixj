@@ -77,7 +77,7 @@ public class SSLAndNonSSLTest {
             ClientApplication clientApplication = new ClientApplication();
 
             ThreadedSocketInitiator initiator = new ThreadedSocketInitiator(clientApplication,
-                    new MemoryStoreFactory(), settings, new DefaultMessageFactory());
+                    new MemoryStoreFactory(), settings, new DefaultMessageFactory(), null);
 
             try {
                 log.info("Do login");
@@ -203,7 +203,7 @@ public class SSLAndNonSSLTest {
                 MessageStoreFactory factory = new MemoryStoreFactory();
                 quickfix.LogFactory logFactory = new ScreenLogFactory(true, true, true);
                 acceptor = new SocketAcceptor(application, factory, settings, logFactory,
-                        new DefaultMessageFactory());
+                        new DefaultMessageFactory(), null);
 
                 acceptor.start();
 

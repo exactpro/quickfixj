@@ -36,7 +36,7 @@ public class SessionFactoryTestSupport implements SessionFactory {
                         ? 30
                         : 0, false, 30, true, resetOnLogon, false, false, false, false, false,
                 true, false, 1.5, null, validateSequenceNumbers, new int[] { 5 }, false, false, false, true,
-                false, true, false, null, true, 0, false, false);
+                false, true, false, null, true, 0, false, false, true, true);
     }
 
     public static Session createSession(SessionID sessionID, Application application,
@@ -47,7 +47,7 @@ public class SessionFactoryTestSupport implements SessionFactory {
                 new DefaultMessageFactory(), isInitiator ? 30 : 0, false, 30, true, resetOnLogon,
                 false, false, false, false, false, true, false, 1.5, senderDefaultApplVerID,
                 validateSequenceNumbers, new int[] { 5 }, false, false, false, true, false, true,
-                false, null, true, 0, false, false);
+                false, null, true, 0, false, false, true, true);
     }
 
     public static Session createSession(SessionID sessionID, Application application,
@@ -62,7 +62,7 @@ public class SessionFactoryTestSupport implements SessionFactory {
                         ? 30
                         : 0, false, 30, true, true, false, false, false, false, false,
                 false/*persistMessages*/, false, 1.5, null, true, new int[] { 5 }, false, false,
-                false, true, false, true, false, null, true, 0, false, false);
+                false, true, false, true, false, null, true, 0, false, false, true, true);
     }
 
     public static Session createSession() throws ConfigError {

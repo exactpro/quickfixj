@@ -108,7 +108,7 @@ public class TimerTestClient extends MessageCracker implements Application {
 
         MessageStoreFactory storeFactory = new MemoryStoreFactory();
         Initiator initiator = new SocketInitiator(this, storeFactory, settings,
-                new ScreenLogFactory(settings), new DefaultMessageFactory());
+                new ScreenLogFactory(settings), new DefaultMessageFactory(), null);
         initiator.start();
 
         try {
@@ -148,4 +148,7 @@ public class TimerTestClient extends MessageCracker implements Application {
         TimerTestClient ttc = new TimerTestClient();
         ttc.run();
     }
+
+    @Override
+    public void onMessageRejected(Message message, SessionID sessionID) {}
 }

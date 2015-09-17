@@ -103,7 +103,7 @@ public class LostLogoutTest {
             settings.setString(sid, "TargetCompID", sid.getTargetCompID());
 
             acceptor = new SocketAcceptor(this, new MemoryStoreFactory(), settings,
-                    new ScreenLogFactory(), new DefaultMessageFactory());
+                    new ScreenLogFactory(), new DefaultMessageFactory(), null);
             acceptor.start();
             Thread.sleep(1000);
         }
@@ -156,6 +156,8 @@ public class LostLogoutTest {
         void shutdown() throws Exception {
             acceptor.stop(true);
         }
+
+        public void onMessageRejected(Message message, SessionID sessionId) {}
     }
 
     /*
@@ -239,5 +241,8 @@ public class LostLogoutTest {
         void shutdown() throws Exception {
             initiator.stop(true);
         }
+
+        public void onMessageRejected(Message message, SessionID sessionId) {}
+
     }
 }

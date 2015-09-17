@@ -160,7 +160,7 @@ public class SessionDisconnectConcurrentlyTest extends TestCase {
         MessageStoreFactory factory = new MemoryStoreFactory();
         quickfix.LogFactory logFactory = new ScreenLogFactory(true, true, true);
         return new SocketInitiator(new ApplicationAdapter() {
-        }, factory, settings, logFactory, new DefaultMessageFactory());
+        }, factory, settings, logFactory, new DefaultMessageFactory(), null);
     }
 
     private void configureInitiatorForSession(SessionSettings settings, int i, int port) {
@@ -189,7 +189,7 @@ public class SessionDisconnectConcurrentlyTest extends TestCase {
         MessageStoreFactory factory = new MemoryStoreFactory();
         quickfix.LogFactory logFactory = new ScreenLogFactory(true, true, true);
         return new SocketAcceptor(testAcceptorApplication, factory, settings, logFactory,
-                new DefaultMessageFactory());
+                new DefaultMessageFactory(), null);
     }
 
     private void configureAcceptorForSession(SessionSettings settings, int i, int port) {

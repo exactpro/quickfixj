@@ -66,7 +66,7 @@ public class SecureSocketTest extends TestCase {
             SessionSettings settings = getClientSessionSettings(clientSessionID);
             ClientApplication clientApplication = new ClientApplication();
             ThreadedSocketInitiator initiator = new ThreadedSocketInitiator(clientApplication,
-                    new MemoryStoreFactory(), settings, new DefaultMessageFactory());
+                    new MemoryStoreFactory(), settings, new DefaultMessageFactory(), null);
             final CountDownLatch exceptionCaught = new CountDownLatch(1);
             initiator.setIoFilterChainBuilder(new IoFilterChainBuilder() {
 
@@ -118,7 +118,7 @@ public class SecureSocketTest extends TestCase {
         settings.setString(SSLSupport.SETTING_KEY_STORE_PWD, "bogus-pwd");
         ClientApplication clientApplication = new ClientApplication();
         final ThreadedSocketInitiator initiator = new ThreadedSocketInitiator(clientApplication,
-                new MemoryStoreFactory(), settings, new DefaultMessageFactory());
+                new MemoryStoreFactory(), settings, new DefaultMessageFactory(), null);
 
         log.info("Start initator and try logon");
         new ExpectedTestFailure(ConfigError.class, "Can't create SSLContext") {
@@ -139,7 +139,7 @@ public class SecureSocketTest extends TestCase {
             SessionSettings settings = getClientSessionSettings(clientSessionID);
             ClientApplication clientApplication = new ClientApplication();
             ThreadedSocketInitiator initiator = new ThreadedSocketInitiator(clientApplication,
-                    new MemoryStoreFactory(), settings, new DefaultMessageFactory());
+                    new MemoryStoreFactory(), settings, new DefaultMessageFactory(), null);
 
             try {
                 log.info("Do login");

@@ -165,10 +165,10 @@ public class ATServer implements Runnable {
             //quickfix.LogFactory logFactory = new JdbcLogFactory(settings);
             if (threaded) {
                 acceptor = new ThreadedSocketAcceptor(application, factory, settings, logFactory,
-                        new DefaultMessageFactory());
+                        new DefaultMessageFactory(), null);
             } else {
                 acceptor = new SocketAcceptor(application, factory, settings, logFactory,
-                        new DefaultMessageFactory());
+                        new DefaultMessageFactory(), null);
             }
             assertSessionIds();
 

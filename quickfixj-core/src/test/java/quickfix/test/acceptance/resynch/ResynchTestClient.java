@@ -120,7 +120,7 @@ public class ResynchTestClient extends MessageCracker implements Application {
 
         MessageStoreFactory storeFactory = new MemoryStoreFactory();
         Initiator initiator = new SocketInitiator(this, storeFactory, settings,
-                new ScreenLogFactory(settings), new DefaultMessageFactory());
+                new ScreenLogFactory(settings), new DefaultMessageFactory(), null);
         initiator.start();
 
         try {
@@ -176,4 +176,7 @@ public class ResynchTestClient extends MessageCracker implements Application {
     public boolean isForceResynch() {
         return forceResynch;
     }
+
+    @Override
+    public void onMessageRejected(Message message, SessionID sessionId) {}
 }

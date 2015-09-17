@@ -7,7 +7,7 @@ ext {
     dictDir = file("dicts/${release}")
 }
 
-archivesBaseName = "quickfixj-${release}"
+//archivesBaseName = "quickfixj-${release}"
 
 // Change default project layout
 sourceSets {
@@ -17,6 +17,17 @@ sourceSets {
         }
         resources {
             srcDir "${dictDir}"
+        }
+    }
+    test {
+        java {
+            srcDir 'src/test/java'
+        }
+        resources {
+            srcDir 'src/test/resources'
+            srcDir  "${dictDir}"
+            srcDir 'src/main/'
+            //include 'config/**'
         }
     }
 }
@@ -45,7 +56,7 @@ dependencies {
     //Using for SleepycatStore
     compile 'berkeleydb:je:2.1.30'
 
-    testCompile 'junit:junit:4.7'
+    testCompile 'junit:junit:4.10'
     testCompile 'org.mockito:mockito-all:1.10.19'
     testCompile 'org.mockito:mockito-core:1.10.19'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
@@ -57,6 +68,14 @@ jar {
     manifest {
         attributes("FIX-Project": "${release}")
     }
+    exclude('quickfix/field/*.class')
+    exclude('quickfix/fix40')
+    exclude('quickfix/fix41')
+    exclude('quickfix/fix42')
+    exclude('quickfix/fix43')
+    exclude('quickfix/fix44')
+    exclude('quickfix/fix50')
+    exclude('quickfix/fixt11')
 }
 
 task generateMessage {
@@ -95,3 +114,27 @@ artifacts {
 
 test.enabled = false
 compileTestJava.enabled = false
+
+test {
+    ignoreFailures = true
+
+    jvmArgs '-XX:MaxPermSize=128m'
+
+    systemProperties 'atest.heartbeat' : '5'
+    systemProperties 'atest.timeout' : '60000'
+    systemProperties 'atest.reconnectDelay' : '5'
+
+    include '**/*Test.class'
+    include '**/AcceptanceTestSuite.class'
+
+    exclude '**/*ForTest.class'
+    exclude '**/Abstract*Test.class'
+    exclude '**/AcceptanceTestSuite$*'
+
+    println "Test args ${allJvmArgs}"
+    //uncomment for logging test time
+    /*afterTest { desc, result ->
+        println "Executing test ${desc.name} [${desc.className}] with result: ${result.resultType}. Time: ${(result.endTime - result.startTime)/1000}s"
+    }*/
+    testLogging.showStandardStreams = true
+}

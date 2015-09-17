@@ -77,7 +77,7 @@ public class DefaultDataDictionaryProviderTest {
         try {
             provider.getSessionDataDictionary("FIX44_Invalid_Test");
         } catch (QFJException e) {
-            assertThat(e.getCause(), is(ConfigError.class));
+            assertThat((ConfigError)e.getCause(), is(ConfigError.class));
         }
     }
 
