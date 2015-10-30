@@ -32,6 +32,8 @@ public class DefaultMessageFactory implements MessageFactory {
     private final Map<String, MessageFactory> messageFactories
         = new ConcurrentHashMap<String, MessageFactory>();
 
+    private final String rootPackage;
+
     /**
      * Constructs a DefaultMessageFactory, which dynamically loads and delegates to
      * the default version-specific message factories, if they are available at runtime.
@@ -39,8 +41,14 @@ public class DefaultMessageFactory implements MessageFactory {
      * Callers can set the {@link Thread#setContextClassLoader context classloader},
      * which will be used to load the classes if {@link Class#forName Class.forName}
      * fails to do so (e.g. in an OSGi environment).
+     * @param rootPackage - Custom package with generated quickfixj classes
      */
-    public DefaultMessageFactory() {
+    public DefaultMessageFactory(String rootPackage) {
+	if (rootPackage != null) {
+		this.rootPackage = rootPackage + ".quickfix.";
+	} else {
+		this.rootPackage = "quickfix.";
+	}
         // To loosen the coupling between this factory and generated code, the
         // message factories are discovered at run time using reflection
         addFactory(BEGINSTRING_FIX40);
@@ -54,10 +62,14 @@ public class DefaultMessageFactory implements MessageFactory {
         addFactory(FIX50SP2);
     }
 
+    public DefaultMessageFactory() {
+	this(null);
+    }
+
     private void addFactory(String beginString) {
         String packageVersion = beginString.replace(".", "").toLowerCase();
         try {
-            addFactory(beginString, "quickfix." + packageVersion + ".MessageFactory");
+            addFactory(beginString, this.rootPackage + packageVersion + ".MessageFactory");
         } catch (ClassNotFoundException e) {
             // ignore - this factory is not available
         }

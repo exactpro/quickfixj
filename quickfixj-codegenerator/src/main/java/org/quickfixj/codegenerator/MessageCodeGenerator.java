@@ -423,9 +423,9 @@ public class MessageCodeGenerator {
     public static void main(String[] args) {
         MessageCodeGenerator codeGenerator = new MessageCodeGenerator();
         try {
-            if (args.length != 3) {
+            if (!(args.length == 3 || args.length == 4)) {
                 String classname = MessageCodeGenerator.class.getName();
-                System.err.println("usage: " + classname + " specDir xformDir outputBaseDir");
+                System.err.println("usage: " + classname + " specDir xformDir outputBaseDir [basePackage]");
                 return;
             }
 
@@ -440,11 +440,15 @@ public class MessageCodeGenerator {
                 Task task = new Task();
                 task.setName(ver);
                 final String version = ver.replaceAll("[ .]", "");
+                String basePackage = "";
+                if (args.length == 4) {
+			basePackage = args[3] + '.';
+                }
                 task.setSpecification(new File(args[0] + "/" + version + ".xml"));
                 task.setTransformDirectory(new File(args[1]));
-                task.setMessagePackage("quickfix." + version.toLowerCase());
+                task.setMessagePackage(basePackage + "quickfix." + version.toLowerCase());
                 task.setOutputBaseDirectory(new File(args[2]));
-                task.setFieldPackage("quickfix.field");
+                task.setFieldPackage(basePackage + "quickfix.field");
                 task.setOverwrite(overwrite);
                 task.setOrderedFields(orderedFields);
                 task.setDecimalGenerated(useDecimal);
