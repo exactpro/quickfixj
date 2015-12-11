@@ -815,6 +815,10 @@ public class Message extends FieldMap {
         return exception;
     }
 
+    public synchronized String getMessageData() {
+        return this.messageData;
+    }
+
     /**
      * Returns the first invalid tag, which is all that can be reported
      * in the resulting FIX reject message.
