@@ -24,7 +24,9 @@ repositories {
     }
 }
 
-ext.sharedDir = file('../shared')
+ext.sharedDir = file('../../shared')
+test.enabled = false
+compileTestJava.enabled = false
 
 // Set defaults
 if (!project.hasProperty("revision")) {
@@ -83,6 +85,11 @@ task codegen (type: GradleBuild) {
     tasks = [ 'assemble' ]
 }
 
+task cleanCodegen (type: GradleBuild) {
+    buildFile ='../quickfixj-codegenerator/build_codegen.gradle'
+    tasks = [ 'clean' ]
+}
+
 compileJava.dependsOn.add('codegen')
 
 uploadArchives {
@@ -94,17 +101,18 @@ uploadArchives {
 }
 
 clean {
+    dependsOn.add("cleanCodegen")
     delete 'srcgen'
 }
 
-task zipDicts(type: Zip) {
-    classifier = 'dicts'
-    from ('dicts')
-}
-
-artifacts {
-    archives(zipDicts)
-}
+//task zipDicts(type: Zip) {
+//    classifier = 'dicts'
+//    from ('dicts')
+//}
+//
+//artifacts {
+//    archives(zipDicts)
+//}
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.0'
