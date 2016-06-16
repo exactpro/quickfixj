@@ -70,6 +70,7 @@ import quickfix.field.TargetSubID;
 import quickfix.field.TestReqID;
 import quickfix.field.Text;
 import quickfix.mina.EventHandlingStrategy;
+import static quickfix.BusinessRejectReasonText.*;
 
 /**
  * The Session is the primary FIX abstraction for message communication. It
@@ -998,7 +999,7 @@ public class Session implements Closeable {
             if (sessionBeginString.compareTo(FixVersions.BEGINSTRING_FIX42) >= 0
                     && message.isApp()) {
                 generateBusinessReject(message,
-                        BusinessRejectReason.CONDITIONALLY_REQUIRED_FIELD_MISSING, e.field);
+                        CONDITIONALLY_REQUIRED_FIELD_MISSING, e.field);
             } else {
                 if (msgType.equals(MsgType.LOGON)) {
                     getLog().onErrorEvent("Required field missing from logon");
@@ -1039,7 +1040,7 @@ public class Session implements Closeable {
                 return;
             }
             if (sessionBeginString.compareTo(FixVersions.BEGINSTRING_FIX42) >= 0) {
-                generateBusinessReject(message, BusinessRejectReason.UNSUPPORTED_MESSAGE_TYPE, 0);
+                generateBusinessReject(message, UNSUPPORTED_MESSAGE_TYPE, 0);
             } else {
                 generateReject(message, "Unsupported message type");
             }
@@ -1073,7 +1074,7 @@ public class Session implements Closeable {
                 }
                 if (!(MessageUtils.isAdminMessage(msgType))
                         && (sessionBeginString.compareTo(FixVersions.BEGINSTRING_FIX42) >= 0)) {
-                    generateBusinessReject(message, BusinessRejectReason.APPLICATION_NOT_AVAILABLE,
+                    generateBusinessReject(message, APPLICATION_NOT_AVAILABLE,
                             0);
                 } else {
                     if (msgType.equals(MsgType.LOGON)) {
@@ -1562,7 +1563,7 @@ public class Session implements Closeable {
         final String msgSeqNum = header.getString(MsgSeqNum.FIELD);
         reject.setString(RefMsgType.FIELD, msgType);
         reject.setString(RefSeqNum.FIELD, msgSeqNum);
-        reject.setInt(BusinessRejectReason.FIELD, err);
+        reject.setInt(FIELD, err);
         state.incrNextTargetMsgSeqNum();
 
         final String reason = BusinessRejectReasonText.getMessage(err);
