@@ -71,11 +71,13 @@ public class FileStore implements MessageStore, Closeable {
     private FileOutputStream headerFileOutputStream;
     private RandomAccessFile senderSequenceNumberFile;
     private RandomAccessFile targetSequenceNumberFile;
+    private SessionID sessionID;
 
     FileStore(String path, SessionID sessionID, boolean syncWrites, int maxCachedMsgs)
             throws IOException {
         this.syncWrites = syncWrites;
         this.maxCachedMsgs = maxCachedMsgs;
+        this.sessionID = sessionID;
 
         if (maxCachedMsgs > 0) {
             messageIndex = new TreeMap<Long, long[]>();
@@ -102,10 +104,13 @@ public class FileStore implements MessageStore, Closeable {
     }
 
     void initialize(boolean deleteFiles) throws IOException {
-        close();
 
         if (deleteFiles) {
+            zeroingSequenceNumbers();
+            closeFiles();
             deleteFiles();
+        } else {
+            closeFiles();
         }
 
         messageFileWriter = new RandomAccessFile(msgFileName, getRandomAccessFileOptions());
@@ -175,6 +180,13 @@ public class FileStore implements MessageStore, Closeable {
         }
     }
 
+    private void zeroingSequenceNumbers() throws IOException {
+        senderSequenceNumberFile.seek(0);
+        senderSequenceNumberFile.writeUTF("1");
+        targetSequenceNumberFile.seek(0);
+        targetSequenceNumberFile.writeUTF("1");
+    }
+
     private void initializeMessageIndex() throws IOException {
         // this part is unnecessary if no offsets are being stored in memory
         if (messageIndex != null) {
@@ -216,7 +228,16 @@ public class FileStore implements MessageStore, Closeable {
 
     /**
      * Close the store's files.
-     *
+     * @deprecated use close instead
+     * @throws IOException
+     */
+    @Deprecated
+    public void closeFiles() throws IOException {
+        close();
+    }
+
+    /**
+     * Close the store's files.
      * @throws IOException
      */
     public void close() throws IOException {
@@ -229,13 +250,23 @@ public class FileStore implements MessageStore, Closeable {
 
     private void closeFile(RandomAccessFile file) throws IOException {
         if (file != null) {
-            file.close();
+            try {
+                file.close();
+            } catch (IOException e){
+                LogUtil.logThrowable(sessionID, e.getMessage(), e);
+                throw e;
+            }
         }
     }
 
     private void closeOutputStream(OutputStream stream) throws IOException {
         if (stream != null) {
-            stream.close();
+            try {
+                stream.close();
+            } catch (IOException e){
+                LogUtil.logThrowable(sessionID, e.getMessage(), e);
+                throw e;
+            }
         }
     }
 
@@ -251,7 +282,7 @@ public class FileStore implements MessageStore, Closeable {
     private void deleteFile(String fileName) throws IOException {
         final File file = new File(fileName);
         if (file.exists() && !file.delete()) {
-            System.err.println("File delete failed: " + fileName);
+            LogUtil.logThrowable(sessionID, "File delete failed: " + fileName + " exists[" + file.exists() + "]", new IOException());
         }
     }
 

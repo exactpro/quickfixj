@@ -106,6 +106,17 @@ public class Session implements Closeable {
     public static final String SETTING_MAX_LATENCY = "MaxLatency";
 
     /**
+     * if set no reject sent on incoming message with duplicate tags
+     */
+    public static final String DUPLICATE_TAGS_ALLOWED = "DuplicateTagsAllowed";
+
+    /**
+     * if set no reject sent on incoming message with duplicate tags
+     */
+    public static final String IGNORE_ABSENCE_OF_141_TAG = "IgnoreAbsenceOf141tag";
+
+
+    /**
      * Session setting for the test delay multiplier (0-1, as fraction of Heartbeat interval)
      */
     public static final String SETTING_TEST_REQUEST_DELAY_MULTIPLIER = "TestRequestDelayMultiplier";
@@ -394,6 +405,8 @@ public class Session implements Closeable {
     private final int[] logonIntervals;
     private final Set<InetAddress> allowedRemoteAddresses;
 
+    private boolean duplicateTagsAllowed = false;
+    private boolean ignoreAbsenceOf141tag = false;
     public static final int DEFAULT_MAX_LATENCY = 120;
     public static final int DEFAULT_RESEND_RANGE_CHUNK_SIZE = 0; // no resend range
     public static final double DEFAULT_TEST_REQUEST_DELAY_MULTIPLIER = 0.5;
@@ -401,17 +414,17 @@ public class Session implements Closeable {
 
     protected final static Logger log = LoggerFactory.getLogger(Session.class);
 
-    Session(Application application, MessageStoreFactory messageStoreFactory, SessionID sessionID,
+    public Session(Application application, MessageStoreFactory messageStoreFactory, SessionID sessionID,
             DataDictionaryProvider dataDictionaryProvider, SessionSchedule sessionSchedule,
             LogFactory logFactory, MessageFactory messageFactory, int heartbeatInterval) {
         this(application, messageStoreFactory, sessionID, dataDictionaryProvider, sessionSchedule,
                 logFactory, messageFactory, heartbeatInterval, true, DEFAULT_MAX_LATENCY, true,
                 false, false, false, false, true, false, true, false,
                 DEFAULT_TEST_REQUEST_DELAY_MULTIPLIER, null, true, new int[] { 5 }, false, false,
-                false, true, false, true, false, null, true, DEFAULT_RESEND_RANGE_CHUNK_SIZE, false, false);
+                false, true, false, true, false, null, true, DEFAULT_RESEND_RANGE_CHUNK_SIZE, false, false, false, false);
     }
 
-    Session(Application application, MessageStoreFactory messageStoreFactory, SessionID sessionID,
+    public Session(Application application, MessageStoreFactory messageStoreFactory, SessionID sessionID,
             DataDictionaryProvider dataDictionaryProvider, SessionSchedule sessionSchedule,
             LogFactory logFactory, MessageFactory messageFactory, int heartbeatInterval,
             boolean checkLatency, int maxLatency, boolean millisecondsInTimeStamp,
@@ -425,7 +438,8 @@ public class Session implements Closeable {
             boolean rejectMessageOnUnhandledException, boolean requiresOrigSendingTime,
             boolean forceResendWhenCorruptedStore, Set<InetAddress> allowedRemoteAddresses,
             boolean validateIncomingMessage, int resendRequestChunkSize,
-            boolean enableNextExpectedMsgSeqNum, boolean enableLastMsgSeqNumProcessed) {
+            boolean enableNextExpectedMsgSeqNum, boolean enableLastMsgSeqNumProcessed,
+            boolean duplicateTagsAllowed, boolean ignoreAbsenceOf141tag) {
         this.application = application;
         this.sessionID = sessionID;
         this.sessionSchedule = sessionSchedule;
@@ -457,6 +471,8 @@ public class Session implements Closeable {
         this.resendRequestChunkSize = resendRequestChunkSize;
         this.enableNextExpectedMsgSeqNum = enableNextExpectedMsgSeqNum;
         this.enableLastMsgSeqNumProcessed = enableLastMsgSeqNumProcessed;
+        this.duplicateTagsAllowed = duplicateTagsAllowed;
+        this.ignoreAbsenceOf141tag = ignoreAbsenceOf141tag;
 
         final Log engineLog = (logFactory != null) ? logFactory.create(sessionID) : null;
         if (engineLog instanceof SessionStateListener) {
@@ -2064,6 +2080,12 @@ public class Session implements Closeable {
             disconnect("Received logon response before sending request", true);
         }
 
+        // Check for proper sequence reset response
+        if(!ignoreAbsenceOf141tag)
+            if (state.isResetSent() && !state.isResetReceived()) {
+                disconnect("Invalid sequence reset response in logon (missing 141=Y?): disconnecting", true);
+            }
+
         state.setResetSent(false);
         state.setResetReceived(false);
 
@@ -2510,7 +2532,7 @@ public class Session implements Closeable {
         return sendRaw(message, 0);
     }
 
-    private boolean send(String messageString) {
+    public boolean send(String messageString) {
         getLog().onOutgoing(messageString);
         Responder responder;
         synchronized (responderLock) {
@@ -2561,6 +2583,10 @@ public class Session implements Closeable {
 
     public SessionID getSessionID() {
         return sessionID;
+    }
+
+    public SessionState getSessionState() {
+        return this.state;
     }
 
     /**
@@ -2822,6 +2848,10 @@ public class Session implements Closeable {
             getLog().onEvent("Session state is not current; resetting " + sessionID);
             reset();
         }
+    }
+
+    public boolean isDuplicateTagsAllowed() {
+        return duplicateTagsAllowed;
     }
 
 }

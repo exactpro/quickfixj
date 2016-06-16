@@ -82,6 +82,9 @@ public class Message extends FieldMap {
     // @GuardedBy("this")
     private FieldException exception;
 
+
+    private boolean duplicateTagsAllowed = false;
+
     public Message() {
         // empty
     }
@@ -549,7 +552,7 @@ public class Message extends FieldMap {
             if (isHeaderField(field.getField())) {
                 // An acceptance test requires the sequence number to
                 // be available even if the related field is out of order
-                setField(header, field);
+                setField(header, field, duplicateTagsAllowed);
                 // Group case
                 if (dd != null && dd.isGroup(DataDictionary.HEADER_ID, field.getField())) {
                     parseGroup(DataDictionary.HEADER_ID, field, dd, header);
@@ -558,7 +561,7 @@ public class Message extends FieldMap {
                     throw new FieldException(SessionRejectReason.TAG_SPECIFIED_OUT_OF_REQUIRED_ORDER,
                         field.getTag());
             } else {
-                setField(this, field);
+                setField(this, field, duplicateTagsAllowed);
                 // Group case
                 if (dd != null && dd.isGroup(getMsgType(), field.getField())) {
                     parseGroup(getMsgType(), field, dd, this);
@@ -569,9 +572,14 @@ public class Message extends FieldMap {
         }
     }
 
-    private void setField(FieldMap fields, StringField field) {
+    private void setField(FieldMap fields, StringField field, boolean duplicateTagsAllowed) {
         if (fields.isSetField(field)) {
-            throw new FieldException(SessionRejectReason.TAG_APPEARS_MORE_THAN_ONCE, field.getTag());
+            try {
+                if (!duplicateTagsAllowed || !fields.getField(field).valueEquals(field.getValue()))
+                    throw new FieldException(SessionRejectReason.TAG_APPEARS_MORE_THAN_ONCE, field.getTag());
+            } catch (FieldNotFound e) {
+                throw new FieldException(SessionRejectReason.OTHER, "Field both set and not set", field.getTag());
+            }
         }
         fields.setField(field);
     }
@@ -824,6 +832,10 @@ public class Message extends FieldMap {
         } catch (final InvalidMessage e) {
             throw new MessageParseError(e.getMessage(), e);
         }
+    }
+
+    public void setDuplicateTagsAllowed(boolean duplicateTagsAllowed) {
+        this.duplicateTagsAllowed = duplicateTagsAllowed;
     }
 
 }

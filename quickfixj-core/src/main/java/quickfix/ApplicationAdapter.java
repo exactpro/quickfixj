@@ -38,6 +38,10 @@ public class ApplicationAdapter implements Application {
         // EMPTY
     }
 
+    public void onMessageRejected(Message message, SessionID sessionId) {
+        // EMPTY
+    }
+
     /* (non-Javadoc)
      * @see quickfix.Application#onCreate(quickfix.SessionID)
      */

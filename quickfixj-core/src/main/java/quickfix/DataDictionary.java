@@ -67,7 +67,7 @@ public class DataDictionary {
     private static final String MESSAGE_CATEGORY_ADMIN = "admin".intern();
     private static final String MESSAGE_CATEGORY_APP = "app".intern();
 
-    private static final int USER_DEFINED_TAG_MIN = 5000;
+    public static final int USER_DEFINED_TAG_MIN = 5000;
     private static final String NO = "N";
     private boolean hasVersion = false;
     private boolean checkFieldsOutOfOrder = true;
@@ -90,7 +90,7 @@ public class DataDictionary {
     private final Map<IntStringPair, GroupInfo> groups = new HashMap<IntStringPair, GroupInfo>();
     private final Map<String, Node> components = new HashMap<String, Node>();
 
-    private DataDictionary() {
+    public DataDictionary() {
     }
 
     /**
@@ -244,7 +244,7 @@ public class DataDictionary {
         return MESSAGE_CATEGORY_APP.equals(messageCategory.get(msgType));
     }
 
-    private void addMsgField(String msgType, int field) {
+    public void addMsgField(String msgType, int field) {
         Set<Integer> fields = messageFields.get(msgType);
         if (fields == null) {
             fields = new HashSet<Integer>();
@@ -406,7 +406,7 @@ public class DataDictionary {
         return true;
     }
 
-    private void addGroup(String msg, int field, int delim, DataDictionary dataDictionary) {
+    public void addGroup(String msg, int field, int delim, DataDictionary dataDictionary) {
         groups.put(new IntStringPair(field, msg), new GroupInfo(delim, dataDictionary));
     }
 
@@ -590,7 +590,48 @@ public class DataDictionary {
         validate(message, bodyOnly ? null : this, this);
     }
 
-    static void validate(Message message, DataDictionary sessionDataDictionary,
+    public Map<Integer, Set<String>> getFieldValues(){
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean isCheckFieldsHaveValues() {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean isCheckUserDefinedFields() {
+        throw new UnsupportedOperationException();
+    }
+
+    public Map<String, Set<Integer>> getMessageFields() {
+        throw new UnsupportedOperationException();
+    }
+
+    public Map<String, Set<Integer>> getRequiredFields() {
+        throw new UnsupportedOperationException();
+    }
+
+    public Set<String> getMessages() {
+        throw new UnsupportedOperationException();
+    }
+
+    public Set<Integer> getFields(){
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean hasVersion() {
+        throw new UnsupportedOperationException();
+    }
+
+    public String getBeginString() {
+        throw new UnsupportedOperationException();
+    }
+
+    public String getMessageName(String msgType) {
+        throw new UnsupportedOperationException();
+    }
+
+
+    public static void validate(Message message, DataDictionary sessionDataDictionary,
             DataDictionary applicationDataDictionary) throws IncorrectTagValue, FieldNotFound,
             IncorrectDataFormat {
         final boolean bodyOnly = sessionDataDictionary == null;
@@ -627,7 +668,7 @@ public class DataDictionary {
         return dd != null && dd.hasVersion;
     }
 
-    private void iterate(FieldMap map, String msgType, DataDictionary dd) throws IncorrectTagValue,
+    public void iterate(FieldMap map, String msgType, DataDictionary dd) throws IncorrectTagValue,
             IncorrectDataFormat {
         final Iterator<Field<?>> iterator = map.iterator();
         while (iterator.hasNext()) {
@@ -658,7 +699,7 @@ public class DataDictionary {
     }
 
     // / Check if message type is defined in spec.
-    private void checkMsgType(String msgType) {
+    public void checkMsgType(String msgType) {
         if (!isMsgType(msgType)) {
             // It would be better to include the msgType in exception message
             // Doing that will break acceptance tests
@@ -672,7 +713,7 @@ public class DataDictionary {
     }
 
     // / Check if field tag number is defined in spec.
-    void checkValidTagNumber(Field<?> field) {
+    public void checkValidTagNumber(Field<?> field) {
         if (!fields.contains(Integer.valueOf(field.getTag()))) {
             throw new FieldException(SessionRejectReason.INVALID_TAG_NUMBER, field.getField());
         }
@@ -768,7 +809,7 @@ public class DataDictionary {
     }
 
     // / Check if group count matches number of groups in
-    private void checkGroupCount(StringField field, FieldMap fieldMap, String msgType) {
+    public void checkGroupCount(StringField field, FieldMap fieldMap, String msgType) {
         final int fieldNum = field.getField();
         if (isGroup(msgType, fieldNum)) {
             if (fieldMap.getGroupCount(fieldNum) != Integer.parseInt(field.getValue())) {
@@ -780,7 +821,7 @@ public class DataDictionary {
     }
 
     // / Check if a message has all required fields.
-    void checkHasRequired(FieldMap header, FieldMap body, FieldMap trailer, String msgType,
+    public void checkHasRequired(FieldMap header, FieldMap body, FieldMap trailer, String msgType,
             boolean bodyOnly) {
         if (!bodyOnly) {
             checkHasRequired(HEADER_ID, header, bodyOnly);
@@ -1198,7 +1239,7 @@ public class DataDictionary {
         }
     }
 
-    private static final class IntStringPair {
+    public static final class IntStringPair {
         private final int intValue;
 
         private final String stringValue;
@@ -1246,7 +1287,7 @@ public class DataDictionary {
 
         private final DataDictionary dataDictionary;
 
-        private GroupInfo(int field, DataDictionary dictionary) {
+        public GroupInfo(int field, DataDictionary dictionary) {
             delimiterField = field;
             dataDictionary = dictionary;
         }

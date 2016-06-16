@@ -63,7 +63,7 @@ public interface Application {
      * @param message QuickFIX message
      * @param sessionId QuickFIX session ID
      */
-    void toAdmin(Message message, SessionID sessionId);
+    void toAdmin(Message message, SessionID sessionId) throws DoNotSend;
 
     /**
      * This callback notifies you when an administrative message is sent from a
@@ -123,4 +123,11 @@ public interface Application {
      */
     void fromApp(Message message, SessionID sessionId) throws FieldNotFound, IncorrectDataFormat,
             IncorrectTagValue, UnsupportedMessageType;
+
+    /**
+     * This callback is invoked when JFQ rejects received message
+     * @param message rejected message
+     * @param sessionId QuickFIX session ID
+     */
+    void onMessageRejected(Message message, SessionID sessionId);
 }
