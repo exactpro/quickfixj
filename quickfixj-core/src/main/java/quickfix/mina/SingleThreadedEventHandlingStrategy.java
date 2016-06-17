@@ -157,10 +157,10 @@ public class SingleThreadedEventHandlingStrategy implements EventHandlingStrateg
     }
 
     public synchronized void stopHandlingMessages() {
+        isStopped = true;
         for (Session session : sessionConnector.getSessionMap().values()) {
             onMessage(session, END_OF_STREAM);
         }
-        isStopped = true;
     }
 
     @Override
