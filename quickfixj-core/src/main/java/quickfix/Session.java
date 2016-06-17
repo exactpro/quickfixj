@@ -1457,6 +1457,8 @@ public class Session implements Closeable {
         reject.setString(Text.FIELD, str);
         sendRaw(reject, 0);
         getLog().onErrorEvent("Reject sent for Message " + msgSeqNum + ": " + str);
+
+        application.onMessageRejected(message, sessionID);
     }
 
     private boolean isPossibleDuplicate(Message message) throws FieldNotFound {
@@ -1470,6 +1472,7 @@ public class Session implements Closeable {
         if (!state.isLogonReceived()) {
             final String errorMessage = "Tried to send a reject while not logged on: " + reason
                     + " (field " + field + ")";
+            application.onMessageRejected(message, sessionID);
             throw new SessionException(errorMessage);
         }
 
@@ -1544,6 +1547,7 @@ public class Session implements Closeable {
         }
 
         sendRaw(reject, 0);
+        application.onMessageRejected(message, sessionID);
     }
 
     private void setRejectReason(Message reject, String reason) {
