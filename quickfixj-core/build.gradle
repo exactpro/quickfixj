@@ -1,0 +1,111 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+apply plugin: 'artifactory'
+
+// Change output directory for jar (default 'build/lib')
+libsDirName = '../libs'
+
+version = '1.6.0-SNAPSHOT'
+group   = 'com.exactprosystems.testtools'
+
+buildscript {
+    repositories {
+        maven { url 'http://arti.exactpro.com/libs-release' }
+    }
+    dependencies {
+        classpath(group: 'org.jfrog.buildinfo', name: 'build-info-extractor-gradle', version: '2.2.+')
+    }
+}
+
+repositories {
+    maven {
+        url 'http://arti.exactpro.com/libs-release'
+    }
+}
+
+ext.sharedDir = file('../shared')
+
+// Set defaults
+if (!project.hasProperty("revision")) {
+    ext.revision = "local_build" // mark local builds
+}
+if (!project.hasProperty("build_number")) {
+    ext.build_number = "local_build" // mark local builds
+}
+if (!project.hasProperty("release")) {
+    ext.release = "default"
+}
+archivesBaseName = "quickfixj-${release}"
+
+// Change default project layout
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+            srcDir '../quickfixj-codegenerator/srcgen'
+        }
+        resources {
+            srcDir "dicts/${release}"
+        }
+    }
+}
+
+configurations {
+    all {transitive = false}
+    all {resolutionStrategy.cacheChangingModulesFor 0, 'seconds' } // don't cache SNAPSHOTs
+}
+
+dependencies {
+    compile 'org.hsqldb:hsqldb:2.3.2'
+    compile 'org.slf4j:slf4j-api:1.7.2'
+    compile 'org.slf4j:slf4j-log4j12:1.7.2'
+    compile 'log4j:log4j:1.2.17'
+    compile 'org.apache.mina:mina-core:2.0.9'
+    compile 'com.cloudhopper.proxool:proxool:0.9.1'
+    compile 'org.apache.avalon.framework:avalon-framework-api:4.3.1'
+    compile 'org.slf4j:jcl-over-slf4j:1.7.12'
+    compile 'berkeleydb:je:2.1.30'
+}
+
+jar {
+    //classifier = "${release}"
+    manifest {
+	attributes('Implementation-Version': "${revision}")
+        attributes("FIX-Project": "${release}")
+        attributes('Build_Number': "${build_number}")
+    }
+}
+
+task codegen (type: GradleBuild) {
+    buildFile ='../quickfixj-codegenerator/build_codegen.gradle'
+    startParameter.projectProperties = gradle.startParameter.projectProperties
+    tasks = [ 'assemble' ]
+}
+
+compileJava.dependsOn.add('codegen')
+
+uploadArchives {
+    repositories.mavenDeployer {
+        uniqueVersion = false // publish non unique snapshots to local repository
+        repository(url: "file://${sharedDir}")
+    }
+    doFirst { sharedDir.mkdirs() }
+}
+
+clean {
+    delete 'srcgen'
+}
+
+task zipDicts(type: Zip) {
+    classifier = 'dicts'
+    from ('dicts')
+}
+
+artifacts {
+    archives(zipDicts)
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.0'
+}
