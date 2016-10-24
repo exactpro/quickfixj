@@ -183,6 +183,8 @@ public class DefaultSessionFactory implements SessionFactory {
             final boolean enableLastMsgSeqNumProcessed = getSetting(settings, sessionID, Session.SETTING_ENABLE_LAST_MSG_SEQ_NUM_PROCESSED, false);
             final int resendRequestChunkSize = getSetting(settings, sessionID, Session.SETTING_RESEND_REQUEST_CHUNK_SIZE, Session.DEFAULT_RESEND_RANGE_CHUNK_SIZE);
             final int receiveLimit = getSetting(settings, sessionID, Session.RECEIVE_LIMIT, 0);
+            final boolean validateFieldsOutOfRange =
+                    getSetting(settings, sessionID, Session.SETTING_VALIDATE_FIELDS_OUT_OF_RANGE, true);
             final int[] logonIntervals = getLogonIntervalsInSeconds(settings, sessionID);
             final Set<InetAddress> allowedRemoteAddresses = getInetAddresses(settings, sessionID);
 
@@ -201,6 +203,7 @@ public class DefaultSessionFactory implements SessionFactory {
             session.setLogonTimeout(logonTimeout);
             session.setLogoutTimeout(logoutTimeout);
             session.setReceiveLimit(receiveLimit);
+            session.setValidateFieldsOutOfRange(validateFieldsOutOfRange);
 
             //
             // Session registration and creation callback is done here instead of in

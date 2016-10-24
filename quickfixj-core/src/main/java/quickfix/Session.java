@@ -349,6 +349,12 @@ public class Session implements Closeable {
 
     public static final String RECEIVE_LIMIT = "ReceiveLimit";
 
+    /**
+     * Default is "Y".
+     * If set to N, messages which contain values not presented in the range will not be rejected.
+     */
+    public static final String SETTING_VALIDATE_FIELDS_OUT_OF_RANGE = "ValidateFieldsOutOfRange";
+
     private static final ConcurrentMap<SessionID, Session> sessions = new ConcurrentHashMap<SessionID, Session>();
 
     private final Application application;
@@ -410,6 +416,7 @@ public class Session implements Closeable {
     private boolean duplicateTagsAllowed = false;
     private boolean ignoreAbsenceOf141tag = false;
     private int receiveLimit = 0;
+    private boolean validateFieldsOutOfRange = true;
     public static final int DEFAULT_MAX_LATENCY = 120;
     public static final int DEFAULT_RESEND_RANGE_CHUNK_SIZE = 0; // no resend range
     public static final double DEFAULT_TEST_REQUEST_DELAY_MULTIPLIER = 0.5;
@@ -952,7 +959,7 @@ public class Session implements Closeable {
                     DataDictionary.validate(message, sessionDataDictionary,
                             applicationDataDictionary);
                 } catch (final IncorrectTagValue e) {
-                    if (rejectInvalidMessage) {
+                    if (rejectInvalidMessage && validateFieldsOutOfRange) {
                         throw e;
                     } else {
                         getLog().onErrorEvent("Warn: incoming message with " + e + ": " + message);
@@ -2879,4 +2886,11 @@ public class Session implements Closeable {
         this.receiveLimit = receiveLimit;
     }
 
+    public boolean isValidateFieldsOutOfRange() {
+        return validateFieldsOutOfRange;
+    }
+
+    public void setValidateFieldsOutOfRange(boolean validateFieldsOutOfRange) {
+        this.validateFieldsOutOfRange = validateFieldsOutOfRange;
+    }
 }
