@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -67,23 +68,16 @@ public class MessageCodeGenerator {
     // The name of the param in the .xsl files to pass the serialVersionUID
     private static final String XSLPARAM_SERIAL_UID = "serialVersionUID";
 
-    protected void logInfo(String msg) {
-        System.out.println(msg);
-    }
+    protected final ILogger logger;
 
-    protected void logDebug(String msg) {
-        System.out.println(msg);
-    }
-
-    protected void logError(String msg, Throwable e) {
-        System.err.println(msg);
-        e.printStackTrace();
+    public MessageCodeGenerator(ILogger logger) {
+        this.logger = logger;
     }
 
     private void generateMessageBaseClass(Task task) throws
             ParserConfigurationException, SAXException, IOException,
             TransformerFactoryConfigurationError, TransformerException {
-        logInfo(task.getName() + ": generating message base class");
+        logger.logInfo("{}: generating message base class", task.getName());
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put(XSLPARAM_SERIAL_UID, SERIAL_UID_STR);
         generateClassCode(task, "Message", parameters);
@@ -105,7 +99,7 @@ public class MessageCodeGenerator {
             throws ParserConfigurationException, SAXException, IOException,
             TransformerFactoryConfigurationError,
             TransformerException {
-        logDebug("generating " + className + " for " + task.getName());
+        logger.logDebug("generating {} for {}", className, task.getName());
         if (parameters == null) {
             parameters = new HashMap<String, String>();
         }
@@ -121,7 +115,7 @@ public class MessageCodeGenerator {
             IOException {
         String outputDirectory = task.getOutputBaseDirectory() + "/" + task.getFieldDirectory()
                 + "/";
-        logInfo(task.getName() + ": generating field classes in " + outputDirectory);
+        logger.logInfo("{}: generating field classes in {}", task.getName(), outputDirectory);
         writePackageDocumentation(outputDirectory, "FIX field definitions for " + task.getName());
         Document document = getSpecification(task);
         List<String> fieldNames = getNames(document.getDocumentElement(), "fields/field");
@@ -130,7 +124,7 @@ public class MessageCodeGenerator {
             for (String fieldName : fieldNames) {
                 String outputFile = outputDirectory + fieldName + ".java";
                 if (!new File(outputFile).exists()) {
-                    logDebug("field: " + fieldName);
+                    logger.logDebug("field: {}", fieldName);
                     Map<String, String> parameters = new HashMap<String, String>();
                     parameters.put("fieldName", fieldName);
                     parameters.put("fieldPackage", task.getFieldPackage());
@@ -143,14 +137,14 @@ public class MessageCodeGenerator {
                 }
             }
         } catch (Exception e) {
-            logError("error while generating field classes", e);
+            logger.logError("error while generating field classes", e);
         }
     }
 
     private void generateMessageSubclasses(Task task) throws ParserConfigurationException,
             SAXException, IOException,
             TransformerFactoryConfigurationError, TransformerException {
-        logInfo(task.getName() + ": generating message subclasses");
+        logger.logInfo("{}: generating message subclasses", task.getName());
         String outputDirectory = task.getOutputBaseDirectory() + "/" + task.getMessageDirectory()
                 + "/";
         writePackageDocumentation(outputDirectory, "Message classes");
@@ -158,7 +152,7 @@ public class MessageCodeGenerator {
         List<String> messageNames = getNames(document.getDocumentElement(), "messages/message");
         Transformer transformer = createTransformer(task, "MessageSubclass.xsl");
         for (String messageName : messageNames) {
-            logDebug("generating message class: " + messageName);
+            logger.logDebug("generating message class: {}", messageName);
             Map<String, String> parameters = new HashMap<String, String>();
             parameters.put("itemName", messageName);
             parameters.put(XSLPARAM_SERIAL_UID, SERIAL_UID_STR);
@@ -173,7 +167,7 @@ public class MessageCodeGenerator {
     private void generateComponentClasses(Task task) throws ParserConfigurationException,
             SAXException, IOException,
             TransformerFactoryConfigurationError, TransformerException {
-        logInfo(task.getName() + ": generating component classes");
+        logger.logInfo("{}: generating component classes", task.getName());
         String outputDirectory = task.getOutputBaseDirectory() + "/" + task.getMessageDirectory()
                 + "/component/";
         Document document = getSpecification(task);
@@ -184,7 +178,7 @@ public class MessageCodeGenerator {
         }
         Transformer transformer = createTransformer(task, "MessageSubclass.xsl");
         for (String componentName : componentNames) {
-            logDebug("generating component class: " + componentName);
+            logger.logDebug("generating component class: {}", componentName);
             Map<String, String> parameters = new HashMap<String, String>();
             parameters.put("itemName", componentName);
             parameters.put("baseClass", "quickfix.MessageComponent");
@@ -205,7 +199,7 @@ public class MessageCodeGenerator {
         if (xslt.exists()) {
             styleSource = new StreamSource(xslt);
         } else {
-            logInfo("Loading predefined xslt file:" + xsltFile);
+            logger.logInfo("Loading predefined xslt file:{}", xsltFile);
             styleSource = new StreamSource(this.getClass().getResourceAsStream(xsltFile));
         }
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -282,12 +276,12 @@ public class MessageCodeGenerator {
                 return;
             }
             if (outputFile.lastModified() > task.getSpecificationLastModified()) {
-                logDebug("Skipping file " + outputFile.getName());
+                logger.logDebug("Skipping file {}", outputFile.getName());
                 return;
             }
         }
-        logDebug("spec has mod " + task.getSpecificationLastModified() +
-                " output has mod " + outputFile.lastModified());
+        logger.logDebug("spec has mod {} output has mod {}",
+                task.getSpecificationLastModified(), outputFile.lastModified());
 
         DOMSource source = new DOMSource(document);
         FileOutputStream fos = new FileOutputStream(outputFile);
@@ -299,7 +293,7 @@ public class MessageCodeGenerator {
             try {
                 bos.close();
             } catch (IOException ioe) {
-                logError("error closing " + outputFile, ioe);
+                logger.logError("error closing {}", outputFile, ioe);
             }
         }
     }
@@ -420,51 +414,162 @@ public class MessageCodeGenerator {
         }
     }
 
+    protected interface ILogger {
+        void logInfo(String msg);
+
+        void logInfo(String msg, Object... params);
+
+        void logDebug(String msg);
+
+        void logDebug(String msg, Object... params);
+
+        void logError(String msg);
+
+        void logError(String msg, Object... params);
+
+        void logError(String msg, Throwable e);
+    }
+
+    protected static class ConsoleLogger implements ILogger {
+        @Override
+        public void logInfo(String msg) {
+            System.out.println(msg);
+        }
+        @Override
+        public void logInfo(String msg, Object... params) {
+            System.out.println(replacePatterns(msg, params));
+        }
+
+        @Override
+        public void logDebug(String msg) {
+            System.out.println(msg);
+        }
+
+        @Override
+        public void logDebug(String msg, Object... params) {
+            System.out.println(replacePatterns(msg, params));
+        }
+
+        @Override
+        public void logError(String msg) {
+            System.err.println(msg);
+        }
+
+        @Override
+        public void logError(String msg, Object... params) {
+            if(params[params.length - 1] instanceof Throwable) {
+                System.out.println(replacePatterns(msg, Arrays.copyOfRange(params, 0, params.length - 1)));
+                ((Throwable)params[params.length - 1]).printStackTrace();
+            } else {
+                System.out.println(replacePatterns(msg, params));
+            }
+        }
+
+        @Override
+        public void logError(String msg, Throwable e) {
+            System.err.println(msg);
+            e.printStackTrace();
+        }
+    }
+
+    protected static class NullLogger implements ILogger {
+        @Override
+        public void logInfo(String msg) {}
+
+        @Override
+        public void logInfo(String msg, Object... params) {}
+
+        @Override
+        public void logDebug(String msg) {}
+
+        @Override
+        public void logDebug(String msg, Object... params) {}
+
+        @Override
+        public void logError(String msg) {}
+
+        @Override
+        public void logError(String msg, Object... params) {}
+
+        @Override
+        public void logError(String msg, Throwable e) {}
+
+    }
+
     public static void main(String[] args) {
-        MessageCodeGenerator codeGenerator = new MessageCodeGenerator();
+        MessageCodeGenerator codeGenerator;
+        ILogger logger = new ConsoleLogger();
         try {
-            if (!(args.length == 3 || args.length == 4)) {
-                String classname = MessageCodeGenerator.class.getName();
-                System.err.println("usage: " + classname + " specDir xformDir outputBaseDir [basePackage]");
-                return;
-            }
+            String basePackage = "";
+            ILogger internalLogger = new NullLogger();
 
-            boolean overwrite = getOption(OVERWRITE_OPTION, true);
-            boolean orderedFields = getOption(ORDERED_FIELDS_OPTION, false);
-            boolean useDecimal = getOption(BIGDECIMAL_TYPE_OPTION, false);
-
-            long start = System.currentTimeMillis();
-            final String[] versions = { "FIXT 1.1", "FIX 5.0", "FIX 4.4", "FIX 4.3", "FIX 4.2",
-                    "FIX 4.1", "FIX 4.0" };
-            for (String ver : versions) {
-                Task task = new Task();
-                task.setName(ver);
-                final String version = ver.replaceAll("[ .]", "");
-                String basePackage = "";
-                if (args.length == 4) {
-			basePackage = args[3] + '.';
+            switch (args.length) {
+            case (5):
+                if(args[4].equals("--log")) {
+                    internalLogger = logger;
                 }
-                task.setSpecification(new File(args[0] + "/" + version + ".xml"));
-                task.setTransformDirectory(new File(args[1]));
-                task.setMessagePackage(basePackage + "quickfix." + version.toLowerCase());
-                task.setOutputBaseDirectory(new File(args[2]));
-                task.setFieldPackage(basePackage + "quickfix.field");
-                task.setOverwrite(overwrite);
-                task.setOrderedFields(orderedFields);
-                task.setDecimalGenerated(useDecimal);
-                codeGenerator.generate(task);
+            case (4):
+                if(!args[3].trim().isEmpty()) {
+                    basePackage = args[3] + '.';
+                }
+            case (3):
+                boolean overwrite = getOption(OVERWRITE_OPTION, true);
+                boolean orderedFields = getOption(ORDERED_FIELDS_OPTION, false);
+                boolean useDecimal = getOption(BIGDECIMAL_TYPE_OPTION, false);
+
+                long start = System.currentTimeMillis();
+                final String[] versions = { "FIXT 1.1", "FIX 5.0", "FIX 4.4", "FIX 4.3", "FIX 4.2",
+                        "FIX 4.1", "FIX 4.0" };
+
+                codeGenerator = new MessageCodeGenerator(internalLogger);
+
+                for (String ver : versions) {
+                    Task task = new Task();
+                    task.setName(ver);
+                    final String version = ver.replaceAll("[ .]", "");
+                    task.setSpecification(new File(args[0] + "/" + version + ".xml"));
+                    task.setTransformDirectory(new File(args[1]));
+                    task.setMessagePackage(basePackage + "quickfix." + version.toLowerCase());
+                    task.setOutputBaseDirectory(new File(args[2]));
+                    task.setFieldPackage(basePackage + "quickfix.field");
+                    task.setOverwrite(overwrite);
+                    task.setOrderedFields(orderedFields);
+                    task.setDecimalGenerated(useDecimal);
+                    codeGenerator.generate(task);
+                }
+                double duration = System.currentTimeMillis() - start;
+                DecimalFormat durationFormat = new DecimalFormat("#.###");
+                logger.logInfo("Time for generation: "
+                        + durationFormat.format(duration / 1000L) + " seconds");
+                break;
+            default:
+                String classname = MessageCodeGenerator.class.getName();
+                logger.logError("usage: " + classname +
+                        " specDir xformDir outputBaseDir [basePackage] [--log]");
             }
-            double duration = System.currentTimeMillis() - start;
-            DecimalFormat durationFormat = new DecimalFormat("#.###");
-            codeGenerator.logInfo("Time for generation: "
-                    + durationFormat.format(duration / 1000L) + " seconds");
         } catch (Exception e) {
-            codeGenerator.logError("error during code generation", e);
+            logger.logError("error during code generation", e);
             System.exit(1);
         }
     }
 
     private static boolean getOption(String key, boolean defaultValue) {
         return System.getProperties().containsKey(key) ? Boolean.getBoolean(key) : defaultValue;
+    }
+
+    protected static String replacePatterns(String src, Object... params) {
+        String[] parts = src.split("\\{\\}", Integer.MAX_VALUE);
+
+        if(params.length != parts.length - 1) {
+            return src;
+        }
+
+        StringBuilder builder = new StringBuilder(parts[0]);
+        for(int i = 1; i < parts.length; i++) {
+            builder.append(params[i - 1].toString());
+            builder.append(parts[i]);
+        }
+
+        return builder.toString();
     }
 }
