@@ -19,9 +19,9 @@
 
 package quickfix.field.converter;
 
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.concurrent.*;
 
@@ -39,14 +39,23 @@ public class UtcTimestampConverter extends AbstractDateTimeConverter {
     private final static ConcurrentHashMap<String, Long> dateCache = new ConcurrentHashMap<String, Long>();
 
     /**
-     * Convert a timestamp (represented as a Date) to a String.
+     * Convert a timestamp (represented as a Timestamp) to a String.
      *
      * @param d the date to convert
      * @param includeMilliseconds controls whether milliseconds are included in the result
+     * @param includeMicroseconds controls whether microseconds are included in the result
      * @return the formatted timestamp
      */
-    public static String convert(Date d, boolean includeMilliseconds) {
-        return getFormatter(includeMilliseconds).format(d);
+    public static String convert(Timestamp d, boolean includeMilliseconds, boolean includeMicroseconds) {
+    	includeMilliseconds = includeMicroseconds || includeMilliseconds;
+        String formattedDate = getFormatter(includeMilliseconds).format(d);
+
+        if (includeMicroseconds) {
+            int micro = d.getNanos() / 1000 % 1000;
+            return formattedDate + String.format("%03d", micro);
+        }
+
+        return formattedDate;
     }
 
     private static DateFormat getFormatter(boolean includeMillis) {
@@ -65,21 +74,31 @@ public class UtcTimestampConverter extends AbstractDateTimeConverter {
     //
 
     /**
-     * Convert a timestamp string into a Date.
+     * Convert a timestamp string into a Timestamp.
      *
      * @param value the timestamp String
      * @return the parsed timestamp
      * @exception FieldConvertError raised if timestamp is an incorrect format.
      */
-    public static Date convert(String value) throws FieldConvertError {
+    public static Timestamp convert(String value) throws FieldConvertError {
         verifyFormat(value);
+        int nanosecond = 0;
         long timeOffset = (parseLong(value.substring(9, 11)) * 3600000L)
                 + (parseLong(value.substring(12, 14)) * 60000L)
                 + (parseLong(value.substring(15, 17)) * 1000L);
-        if (value.length() == 21) {
-            timeOffset += parseLong(value.substring(18, 21));
-        }
-        return new Date(getMillisForDay(value) + timeOffset);
+        Timestamp result = new Timestamp(getMillisForDay(value) + timeOffset);
+        
+        switch (value.length()) {
+        case 24:
+        	nanosecond += parseLong(value.substring(22, 24)) * 1_000;
+		case 21:
+			nanosecond += parseLong(value.substring(18, 21)) * 1_000_000;
+		default:
+			break;
+		}
+        result.setNanos(nanosecond);
+        
+        return result;
     }
 
     private static Long getMillisForDay(String value) {
@@ -100,7 +119,7 @@ public class UtcTimestampConverter extends AbstractDateTimeConverter {
 
     private static void verifyFormat(String value) throws FieldConvertError {
         String type = "timestamp";
-        if (value.length() != 17 && value.length() != 21) {
+        if (value.length() != 17 && value.length() != 21  && value.length() != 24) {
             throwFieldConvertError(value, type);
         }
         assertDigitSequence(value, 0, 8, type);
@@ -110,11 +129,17 @@ public class UtcTimestampConverter extends AbstractDateTimeConverter {
         assertDigitSequence(value, 12, 14, type);
         assertSeparator(value, 14, ':', type);
         assertDigitSequence(value, 15, 17, type);
-        if (value.length() == 21) {
-            assertSeparator(value, 17, '.', type);
-            assertDigitSequence(value, 18, 21, type);
-        } else if (value.length() != 17) {
-            throwFieldConvertError(value, type);
-        }
+
+        switch (value.length()) {
+        case 24: //microseconds
+        	assertDigitSequence(value, 22, 24, type);
+        case 21: //milliseconds			
+        	assertSeparator(value, 17, '.', type);
+        	assertDigitSequence(value, 18, 21, type);
+        case 17:
+			break;
+		default:
+			throwFieldConvertError(value, type);
+		}
     }
 }

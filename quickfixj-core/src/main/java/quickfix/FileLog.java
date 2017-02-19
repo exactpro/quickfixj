@@ -55,9 +55,10 @@ public class FileLog extends AbstractLog {
     private FileOutputStream events;
 
     private final boolean includeMillis;
+    private final boolean includeMicros;
     private final boolean includeTimestampForMessages;
 
-    FileLog(String path, SessionID sessionID, boolean includeMillis, boolean includeTimestampForMessages, boolean logHeartbeats) throws FileNotFoundException {
+    FileLog(String path, SessionID sessionID, boolean includeMillis, boolean includeMicros, boolean includeTimestampForMessages, boolean logHeartbeats) throws FileNotFoundException {
         String sessionName = FileUtil.sessionIdFileName(sessionID);
 
         setLogHeartbeats(logHeartbeats);
@@ -72,6 +73,7 @@ public class FileLog extends AbstractLog {
         }
 
         this.includeMillis = includeMillis;
+        this.includeMicros = includeMicros;
         this.includeTimestampForMessages = includeTimestampForMessages;
 
         openLogStreams(true);
@@ -118,7 +120,7 @@ public class FileLog extends AbstractLog {
     }
 
     private void writeTimeStamp(OutputStream out) throws IOException {
-        String formattedTime = UtcTimestampConverter.convert(SystemTime.getDate(), includeMillis);
+        String formattedTime = UtcTimestampConverter.convert(SystemTime.getDate(), includeMillis, includeMicros);
         out.write(formattedTime.getBytes(CharsetSupport.getCharset()));
         out.write(TIME_STAMP_DELIMITER);
     }

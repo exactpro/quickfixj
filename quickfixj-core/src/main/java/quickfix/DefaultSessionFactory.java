@@ -140,6 +140,9 @@ public class DefaultSessionFactory implements SessionFactory {
             final boolean millisInTimestamp = getSetting(settings, sessionID,
                     Session.SETTING_MILLISECONDS_IN_TIMESTAMP, true);
 
+            final boolean microsInTimestamp = getSetting(settings, sessionID,
+                    Session.SETTING_MICROSECONDS_IN_TIMESTAMP, false);
+            
             final boolean resetOnLogout = getSetting(settings, sessionID,
                     Session.SETTING_RESET_ON_LOGOUT, false);
 
@@ -190,7 +193,7 @@ public class DefaultSessionFactory implements SessionFactory {
 
             final Session session = new Session(application, messageStoreFactory, sessionID,
                     dataDictionaryProvider, new SessionSchedule(settings, sessionID), logFactory,
-                    messageFactory, heartbeatInterval, checkLatency, maxLatency, millisInTimestamp,
+                    messageFactory, heartbeatInterval, checkLatency, maxLatency, millisInTimestamp, microsInTimestamp,
                     resetOnLogon, resetOnLogout, resetOnDisconnect, refreshAtLogon, checkCompID,
                     redundantResentRequestAllowed, persistMessages, useClosedIntervalForResend,
                     testRequestDelayMultiplier, senderDefaultApplVerID, validateSequenceNumbers,

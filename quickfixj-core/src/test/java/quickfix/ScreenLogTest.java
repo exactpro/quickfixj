@@ -21,7 +21,7 @@ package quickfix;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.Date;
+import java.sql.Timestamp;
 
 import quickfix.field.converter.UtcTimestampConverter;
 
@@ -92,7 +92,7 @@ public class ScreenLogTest extends TestCase {
 
     private void assertLoggedMessage(ByteArrayOutputStream data, long systemTime, String type,
             String content) {
-        String expectedLogEntry = "<" + UtcTimestampConverter.convert(new Date(systemTime), false)
+        String expectedLogEntry = "<" + UtcTimestampConverter.convert(new Timestamp(systemTime), false, false)
                 + ", FIX.4.2:SENDER->TARGET, " + type + "> (" + content + ")"
                 + System.getProperty("line.separator");
         String actualLogEntry = new String(data.toByteArray());

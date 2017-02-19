@@ -20,8 +20,8 @@
 package quickfix.test.acceptance;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.text.DecimalFormat;
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -124,9 +124,9 @@ public class InitiateMessageStep implements TestStep {
             }
             String beginString = message.substring(2, 9);
             boolean includeMillis = beginString.compareTo(FixVersions.BEGINSTRING_FIX42) >= 0;
-            message = matcher.replaceFirst(UtcTimestampConverter.convert(new Date(System
+            message = matcher.replaceFirst(UtcTimestampConverter.convert(new Timestamp(System
                     .currentTimeMillis()
-                    + offset), includeMillis));
+                    + offset), includeMillis, false));
             matcher = TIME_PATTERN.matcher(message);
         }
         return message;

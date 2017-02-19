@@ -19,7 +19,7 @@
 
 package quickfix;
 
-import java.util.Date;
+import java.sql.Timestamp;
 
 /**
  * A date-valued message field.
@@ -29,7 +29,7 @@ public class UtcDateOnlyField extends DateField {
         super(field);
     }
 
-    protected UtcDateOnlyField(int field, Date data) {
+    protected UtcDateOnlyField(int field, Timestamp data) {
         super(field, data);
     }
 }

@@ -19,6 +19,7 @@
 
 package quickfix.field.converter;
 
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
@@ -60,13 +61,14 @@ public class UtcDateOnlyConverter extends AbstractDateTimeConverter {
      * @return the parsed Date
      * @throws FieldConvertError raised for an invalid date string.
      */
-    public static Date convert(String value) throws FieldConvertError {
-        Date d = null;
+    public static Timestamp convert(String value) throws FieldConvertError {
+        Timestamp d = null;
         String type = "date";
         assertLength(value, 8, type);
         assertDigitSequence(value, 0, 8, type);
         try {
-            d = getFormatter().parse(value);
+            Date date = getFormatter().parse(value);
+            d = new Timestamp(date.getTime());
         } catch (ParseException e) {
             throwFieldConvertError(value, type);
         }

@@ -25,7 +25,7 @@ import static org.mockito.Mockito.stub;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import java.util.Date;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -81,7 +81,7 @@ public class AcceptorIoHandlerTest {
                 new HeartBtInt(30), defaultApplVerID);
         message.getHeader().setString(TargetCompID.FIELD, sessionID.getSenderCompID());
         message.getHeader().setString(SenderCompID.FIELD, sessionID.getTargetCompID());
-        message.getHeader().setField(new SendingTime(new Date()));
+        message.getHeader().setField(new SendingTime(new Timestamp(System.currentTimeMillis())));
         message.getHeader().setInt(MsgSeqNum.FIELD, 1);
 
         handler.processMessage(mockIoSession, message);

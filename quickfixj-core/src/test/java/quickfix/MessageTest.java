@@ -27,8 +27,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.TimeZone;
 
 import org.junit.Test;
@@ -133,7 +133,7 @@ public class MessageTest {
     private NewOrderSingle createNewOrderSingle() {
         return new NewOrderSingle(new ClOrdID("CLIENT"), new HandlInst(
                 HandlInst.AUTOMATED_EXECUTION_ORDER_PUBLIC), new Symbol("ORCL"),
-                new Side(Side.BUY), new TransactTime(new Date(0)), new OrdType(OrdType.LIMIT));
+                new Side(Side.BUY), new TransactTime(new Timestamp(0)), new OrdType(OrdType.LIMIT));
     }
 
     @Test
@@ -1022,7 +1022,7 @@ public class MessageTest {
         calendar.set(2002, 8, 6, 12, 34, 56);
         calendar.set(Calendar.MILLISECOND, 0);
 
-        final Date time = calendar.getTime();
+        final Timestamp time = new Timestamp(calendar.getTimeInMillis());
         message.setUtcTimeStamp(8, time);
 
         try {

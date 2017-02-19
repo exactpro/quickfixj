@@ -1,8 +1,6 @@
 apply plugin: 'artifactory'
 apply plugin: 'provided-base'
 
-version = '1.6.0-SNAPSHOT'
-
 ext {
     dictDir = file('src/main/dicts')
 }
@@ -25,7 +23,7 @@ sourceSets {
 
 dependencies {
     if (incremental_build) {
-        compile 'com.exactprosystems.testtools:quickfixj-code-generator:1.6.0-SNAPSHOT'
+        compile 'com.exactprosystems.testtools:quickfixj-code-generator:1.6.0.1-SNAPSHOT'
     } else {
         compile project(':quickfixj-codegenerator')
     }

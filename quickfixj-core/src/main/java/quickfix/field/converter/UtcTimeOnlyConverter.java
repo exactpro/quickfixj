@@ -19,6 +19,7 @@
 
 package quickfix.field.converter;
 
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
@@ -36,14 +37,23 @@ public class UtcTimeOnlyConverter extends AbstractDateTimeConverter {
     private final DateFormat utcTimeFormatMillis = createDateFormat("HH:mm:ss.SSS");
 
     /**
-     * Convert a time (represented as a Date) to a String (HH:MM:SS or HH:MM:SS.SSS)
+     * Convert a time (represented as a Timestamp) to a String (HH:MM:SS or HH:MM:SS.SSS)
      *
      * @param d the date with the time to convert
      * @param includeMilliseconds controls whether milliseconds are included in the result
+     * @param includeMicroseconds controls whether microseconds are included in the result
      * @return a String representing the time.
      */
-    public static String convert(Date d, boolean includeMilliseconds) {
-        return getFormatter(includeMilliseconds).format(d);
+    public static String convert(Timestamp d, boolean includeMilliseconds, boolean includeMicroseconds) {
+    	includeMilliseconds = includeMicroseconds || includeMilliseconds;
+    	String formattedDate = getFormatter(includeMilliseconds).format(d);
+
+        if (includeMicroseconds) {
+            int micro = d.getNanos() / 1000 % 1000;
+            return formattedDate + String.format("%03d", micro);
+        }
+
+        return formattedDate;
     }
 
     private static DateFormat getFormatter(boolean includeMillis) {
@@ -62,10 +72,26 @@ public class UtcTimeOnlyConverter extends AbstractDateTimeConverter {
      * @return a date object representing the time
      * @throws FieldConvertError raised for invalid time string
      */
-    public static Date convert(String value) throws FieldConvertError {
-        Date d = null;
+    public static Timestamp convert(String value) throws FieldConvertError {
+    	Timestamp d = null;
         try {
-            d = getFormatter(value.length() == 12).parse(value);
+        	int nanosecond = 0;
+        	Date date = null;
+        	switch (value.length()) {
+        	case 15:
+        		nanosecond += parseLong(value.substring(13, 15)) * 1_000;
+        	case 12:
+        		date = getFormatter(true).parse(value.substring(0, 12));
+        		break;
+        	case 8:
+        		date = getFormatter(false).parse(value);
+				break;
+			default:
+				throwFieldConvertError(value, "time");
+			}
+        	d = new Timestamp(date.getTime());
+        	nanosecond += d.getNanos();
+        	d.setNanos(nanosecond);
         } catch (ParseException e) {
             throwFieldConvertError(value, "time");
         }

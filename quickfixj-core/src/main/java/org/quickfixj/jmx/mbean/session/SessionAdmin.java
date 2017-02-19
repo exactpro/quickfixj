@@ -337,7 +337,7 @@ public class SessionAdmin extends NotificationBroadcasterSupport implements Sess
 
     public String getStartTime() {
         try {
-            return UtcTimestampConverter.convert(session.getStartTime(), true);
+            return UtcTimestampConverter.convert(session.getStartTime(), true, true);
         } catch (IOException e) {
             return "[ERROR]";
         }

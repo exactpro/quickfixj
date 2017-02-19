@@ -24,6 +24,7 @@ import static quickfix.LogUtil.logThrowable;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -41,7 +42,6 @@ import quickfix.SessionState.ResendRange;
 import quickfix.field.ApplVerID;
 import quickfix.field.BeginSeqNo;
 import quickfix.field.BeginString;
-import quickfix.field.BusinessRejectReason;
 import quickfix.field.DefaultApplVerID;
 import quickfix.field.EncryptMethod;
 import quickfix.field.EndSeqNo;
@@ -262,6 +262,12 @@ public class Session implements Closeable {
      * values are "Y" or "N". Default is "Y". Only valid for FIX version >= 4.2.
      */
     public static final String SETTING_MILLISECONDS_IN_TIMESTAMP = "MillisecondsInTimeStamp";
+    
+    /**
+     * Session setting to enable microseconds in message timestamps. Valid
+     * values are "Y" or "N". Default is "Y". Only valid for FIX version >= 5.0.
+     */
+    public static final String SETTING_MICROSECONDS_IN_TIMESTAMP = "MicrosecondsInTimeStamp";
 
     /**
      * Controls validation of user-defined fields.
@@ -387,6 +393,7 @@ public class Session implements Closeable {
     private final boolean resetOnError;
     private final boolean disconnectOnError;
     private final boolean millisecondsInTimeStamp;
+    private final boolean microsecondsInTimeStamp;
     private final boolean refreshMessageStoreAtLogon;
     private final boolean redundantResentRequestsAllowed;
     private final boolean persistMessages;
@@ -428,7 +435,7 @@ public class Session implements Closeable {
             DataDictionaryProvider dataDictionaryProvider, SessionSchedule sessionSchedule,
             LogFactory logFactory, MessageFactory messageFactory, int heartbeatInterval) {
         this(application, messageStoreFactory, sessionID, dataDictionaryProvider, sessionSchedule,
-                logFactory, messageFactory, heartbeatInterval, true, DEFAULT_MAX_LATENCY, true,
+                logFactory, messageFactory, heartbeatInterval, true, DEFAULT_MAX_LATENCY, true, false,
                 false, false, false, false, true, false, true, false,
                 DEFAULT_TEST_REQUEST_DELAY_MULTIPLIER, null, true, new int[] { 5 }, false, false,
                 false, true, false, true, false, null, true, DEFAULT_RESEND_RANGE_CHUNK_SIZE, false, false, false, false);
@@ -438,18 +445,18 @@ public class Session implements Closeable {
             DataDictionaryProvider dataDictionaryProvider, SessionSchedule sessionSchedule,
             LogFactory logFactory, MessageFactory messageFactory, int heartbeatInterval,
             boolean checkLatency, int maxLatency, boolean millisecondsInTimeStamp,
-            boolean resetOnLogon, boolean resetOnLogout, boolean resetOnDisconnect,
-            boolean refreshMessageStoreAtLogon, boolean checkCompID,
-            boolean redundantResentRequestsAllowed, boolean persistMessages,
-            boolean useClosedRangeForResend, double testRequestDelayMultiplier,
-            DefaultApplVerID senderDefaultApplVerID, boolean validateSequenceNumbers,
-            int[] logonIntervals, boolean resetOnError, boolean disconnectOnError,
-            boolean disableHeartBeatCheck, boolean rejectInvalidMessage,
-            boolean rejectMessageOnUnhandledException, boolean requiresOrigSendingTime,
-            boolean forceResendWhenCorruptedStore, Set<InetAddress> allowedRemoteAddresses,
-            boolean validateIncomingMessage, int resendRequestChunkSize,
-            boolean enableNextExpectedMsgSeqNum, boolean enableLastMsgSeqNumProcessed,
-            boolean duplicateTagsAllowed, boolean ignoreAbsenceOf141tag) {
+            boolean microsecondsInTimeStamp, boolean resetOnLogon, boolean resetOnLogout,
+            boolean resetOnDisconnect, boolean refreshMessageStoreAtLogon,
+            boolean checkCompID, boolean redundantResentRequestsAllowed,
+            boolean persistMessages, boolean useClosedRangeForResend,
+            double testRequestDelayMultiplier, DefaultApplVerID senderDefaultApplVerID,
+            boolean validateSequenceNumbers, int[] logonIntervals, boolean resetOnError,
+            boolean disconnectOnError, boolean disableHeartBeatCheck,
+            boolean rejectInvalidMessage, boolean rejectMessageOnUnhandledException,
+            boolean requiresOrigSendingTime, boolean forceResendWhenCorruptedStore,
+            Set<InetAddress> allowedRemoteAddresses, boolean validateIncomingMessage,
+            int resendRequestChunkSize, boolean enableNextExpectedMsgSeqNum,
+            boolean enableLastMsgSeqNumProcessed, boolean duplicateTagsAllowed, boolean ignoreAbsenceOf141tag) {
         this.application = application;
         this.sessionID = sessionID;
         this.sessionSchedule = sessionSchedule;
@@ -459,6 +466,7 @@ public class Session implements Closeable {
         this.resetOnLogout = resetOnLogout;
         this.resetOnDisconnect = resetOnDisconnect;
         this.millisecondsInTimeStamp = millisecondsInTimeStamp;
+        this.microsecondsInTimeStamp = microsecondsInTimeStamp;
         this.refreshMessageStoreAtLogon = refreshMessageStoreAtLogon;
         this.dataDictionaryProvider = dataDictionaryProvider;
         this.messageFactory = messageFactory;
@@ -721,7 +729,7 @@ public class Session implements Closeable {
     }
 
     private void insertSendingTime(Message.Header header) {
-        header.setUtcTimeStamp(SendingTime.FIELD, SystemTime.getDate(), includeMillis());
+        header.setUtcTimeStamp(SendingTime.FIELD, SystemTime.getDate(), includeMillis(), includeMicros());
     }
 
     private boolean includeMillis() {
@@ -729,6 +737,11 @@ public class Session implements Closeable {
                 && sessionID.getBeginString().compareTo(FixVersions.BEGINSTRING_FIX42) >= 0;
     }
 
+    private boolean includeMicros() {
+        return microsecondsInTimeStamp
+                && sessionID.getBeginString().compareTo(FixVersions.BEGINSTRING_FIXT11) >= 0;
+    }
+    
     /**
      * This method can be used to manually logout of a FIX session.
      */
@@ -1273,7 +1286,7 @@ public class Session implements Closeable {
         header.setBoolean(PossDupFlag.FIELD, true);
         initializeHeader(header);
         header.setUtcTimeStamp(OrigSendingTime.FIELD, header.getUtcTimeStamp(SendingTime.FIELD),
-                includeMillis());
+                includeMillis(), includeMicros());
         header.setInt(MsgSeqNum.FIELD, beginSeqNo);
         sequenceReset.setInt(NewSeqNo.FIELD, newSeqNo);
         sequenceReset.setBoolean(GapFillFlag.FIELD, true);
@@ -1305,8 +1318,8 @@ public class Session implements Closeable {
 
     private void initializeResendFields(Message message) throws FieldNotFound {
         final Message.Header header = message.getHeader();
-        final Date sendingTime = header.getUtcTimeStamp(SendingTime.FIELD);
-        header.setUtcTimeStamp(OrigSendingTime.FIELD, sendingTime, includeMillis());
+        final Timestamp sendingTime = header.getUtcTimeStamp(SendingTime.FIELD);
+        header.setUtcTimeStamp(OrigSendingTime.FIELD, sendingTime, includeMillis(), includeMicros());
         header.setBoolean(PossDupFlag.FIELD, true);
         insertSendingTime(header);
     }
@@ -2733,7 +2746,7 @@ public class Session implements Closeable {
         return dataDictionaryProvider != null;
     }
 
-    public Date getStartTime() throws IOException {
+    public Timestamp getStartTime() throws IOException {
         return state.getCreationTime();
     }
 

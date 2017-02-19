@@ -25,12 +25,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -63,7 +63,7 @@ public class SessionScheduleTest {
     public void testSessionAlwaysActive() throws Exception {
         Calendar start = getUtcTime(0, 0, 0);
         Calendar end = getUtcTime(0, 0, 0);
-        SessionSchedule schedule = newSessionSchedule(start.getTime(), end.getTime(), -1, -1);
+        SessionSchedule schedule = newSessionSchedule(new Timestamp(start.getTimeInMillis()), new Timestamp(end.getTimeInMillis()), -1, -1);
         doIsSessionTimeTest(schedule, true, 2004, 10, 10, 10, 0, 0);
     }
 
@@ -71,7 +71,7 @@ public class SessionScheduleTest {
     public void testSessionTimeStartBeforeEnd() throws Exception {
         Calendar start = getUtcTime(3, 0, 0);
         Calendar end = getUtcTime(18, 0, 0);
-        SessionSchedule schedule = newSessionSchedule(start.getTime(), end.getTime(), -1, -1);
+        SessionSchedule schedule = newSessionSchedule(new Timestamp(start.getTimeInMillis()), new Timestamp(end.getTimeInMillis()), -1, -1);
         doIsSessionTimeTest(schedule, true, 2004, 10, 10, 10, 0, 0);
         doIsSessionTimeTest(schedule, true, 2004, 10, 10, 18, 0, 0);
         doIsSessionTimeTest(schedule, false, 2004, 10, 10, 2, 0, 0);
@@ -79,7 +79,7 @@ public class SessionScheduleTest {
         doIsSessionTimeTest(schedule, false, 2004, 10, 10, 18, 0, 1);
     }
 
-    private SessionSchedule newSessionSchedule(Date startTime, Date endTime, int startDay,
+    private SessionSchedule newSessionSchedule(Timestamp startTime, Timestamp endTime, int startDay,
             int endDay) throws Exception {
         SessionSettings settings = new SessionSettings();
         if (startDay >= 0) {
@@ -89,8 +89,8 @@ public class SessionScheduleTest {
             settings.setString(Session.SETTING_END_DAY, DayConverter.toString(endDay));
         }
         settings.setString(Session.SETTING_START_TIME, UtcTimeOnlyConverter.convert(startTime,
-                false));
-        settings.setString(Session.SETTING_END_TIME, UtcTimeOnlyConverter.convert(endTime, false));
+                false, false));
+        settings.setString(Session.SETTING_END_TIME, UtcTimeOnlyConverter.convert(endTime, false, false));
         SessionID sessionID = new SessionID("FIX.4.2", "SENDER", "TARGET");
         return new SessionSchedule(settings, sessionID);
     }
@@ -99,7 +99,7 @@ public class SessionScheduleTest {
     public void testSessionTimeEndBeforeStart() throws Exception {
         Calendar start = getUtcTime(18, 0, 0);
         Calendar end = getUtcTime(3, 0, 0);
-        SessionSchedule schedule = newSessionSchedule(start.getTime(), end.getTime(), -1, -1);
+        SessionSchedule schedule = newSessionSchedule(new Timestamp(start.getTimeInMillis()), new Timestamp(end.getTimeInMillis()), -1, -1);
         doIsSessionTimeTest(schedule, true, 2000, Calendar.NOVEMBER, 10, 18, 0, 0);
         doIsSessionTimeTest(schedule, true, 2000, Calendar.NOVEMBER, 10, 3, 0, 0);
         doIsSessionTimeTest(schedule, false, 2000, Calendar.NOVEMBER, 10, 4, 0, 0);
@@ -110,7 +110,7 @@ public class SessionScheduleTest {
     public void testShortSessionTestStartBeforeEnd() throws Exception {
         Calendar start = getUtcTime(18, 0, 0);
         Calendar end = getUtcTime(18, 30, 0);
-        SessionSchedule schedule = newSessionSchedule(start.getTime(), end.getTime(), -1, -1);
+        SessionSchedule schedule = newSessionSchedule(new Timestamp(start.getTimeInMillis()), new Timestamp(end.getTimeInMillis()), -1, -1);
         doIsSessionTimeTest(schedule, false, 2000, 10, 10, 17, 15, 0);
         doIsSessionTimeTest(schedule, true, 2000, 10, 10, 18, 0, 0);
         doIsSessionTimeTest(schedule, true, 2000, 10, 10, 18, 15, 0);
@@ -122,7 +122,7 @@ public class SessionScheduleTest {
     public void testShortSessionTestStartAfterEnd() throws Exception {
         Calendar start = getUtcTime(18, 30, 0);
         Calendar end = getUtcTime(18, 0, 0);
-        SessionSchedule schedule = newSessionSchedule(start.getTime(), end.getTime(), -1, -1);
+        SessionSchedule schedule = newSessionSchedule(new Timestamp(start.getTimeInMillis()), new Timestamp(end.getTimeInMillis()), -1, -1);
         doIsSessionTimeTest(schedule, false, 2000, 10, 10, 18, 15, 0);
         doIsSessionTimeTest(schedule, true, 2000, 10, 10, 18, 0, 0);
         doIsSessionTimeTest(schedule, true, 2000, 10, 10, 19, 15, 0);
@@ -173,7 +173,7 @@ public class SessionScheduleTest {
     public void testSessionTimeWithDay() throws Exception {
         Calendar start = getUtcTime(18, 0, 0);
         Calendar end = getUtcTime(3, 0, 0);
-        SessionSchedule schedule = newSessionSchedule(start.getTime(), end.getTime(),
+        SessionSchedule schedule = newSessionSchedule(new Timestamp(start.getTimeInMillis()), new Timestamp(end.getTimeInMillis()),
                 Calendar.SATURDAY, Calendar.SATURDAY);
 
         // July 24, 2004 - Saturday
@@ -194,7 +194,7 @@ public class SessionScheduleTest {
         // start time is less than end time
         Calendar start = getUtcTime(3, 0, 0);
         Calendar end = getUtcTime(18, 0, 0);
-        SessionSchedule schedule = newSessionSchedule(start.getTime(), end.getTime(), -1, -1);
+        SessionSchedule schedule = newSessionSchedule(new Timestamp(start.getTimeInMillis()), new Timestamp(end.getTimeInMillis()), -1, -1);
 
         // same time
         Calendar t1 = getUtcTimeStamp(2000, 10, 10, 10, 0, 0);
@@ -230,7 +230,7 @@ public class SessionScheduleTest {
         // start time is greater than end time
         start = getUtcTime(18, 0, 0);
         end = getUtcTime(13, 0, 0);
-        schedule = newSessionSchedule(start.getTime(), end.getTime(), -1, -1);
+        schedule = newSessionSchedule(new Timestamp(start.getTimeInMillis()), new Timestamp(end.getTimeInMillis()), -1, -1);
 
         // same session same day
         t1 = getUtcTimeStamp(2000, 10, 10, 19, 0, 0);
@@ -261,7 +261,7 @@ public class SessionScheduleTest {
 
         start = getUtcTime(10, 0, 0);
         end = getUtcTime(2, 0, 0);
-        schedule = newSessionSchedule(start.getTime(), end.getTime(), -1, -1);
+        schedule = newSessionSchedule(new Timestamp(start.getTimeInMillis()), new Timestamp(end.getTimeInMillis()), -1, -1);
 
         t1 = getUtcTimeStamp(2000, 10, 10, 17, 0, 0);
         t2 = getUtcTimeStamp(2000, 10, 10, 1, 0, 0);
@@ -273,7 +273,7 @@ public class SessionScheduleTest {
         // start time is equal to end time
         start = getUtcTime(6, 0, 0);
         end = getUtcTime(6, 0, 0);
-        schedule = newSessionSchedule(start.getTime(), end.getTime(), -1, -1);
+        schedule = newSessionSchedule(new Timestamp(start.getTimeInMillis()), new Timestamp(end.getTimeInMillis()), -1, -1);
 
         t1 = getUtcTimeStamp(2004, 1, 13, 19, 10, 0);
         t2 = getUtcTimeStamp(2004, 10, 14, 19, 6, 0);
@@ -284,7 +284,7 @@ public class SessionScheduleTest {
     public void testIsSameSessionWithDay() throws Exception {
         Calendar start = getUtcTime(3, 0, 0);
         Calendar end = getUtcTime(18, 0, 0);
-        SessionSchedule schedule = newSessionSchedule(start.getTime(), end.getTime(),
+        SessionSchedule schedule = newSessionSchedule(new Timestamp(start.getTimeInMillis()), new Timestamp(end.getTimeInMillis()),
                 Calendar.MONDAY, Calendar.THURSDAY);
 
         Calendar t1 = getUtcTimeStamp(2004, Calendar.JULY, 27, 3, 0, 0);
@@ -326,7 +326,7 @@ public class SessionScheduleTest {
         // Make it a week-long session
         int startDay = 1;
         int endDay = 7;
-        schedule = newSessionSchedule(startTime.getTime(), endTime.getTime(), startDay, endDay);
+        schedule = newSessionSchedule(new Timestamp(startTime.getTimeInMillis()), new Timestamp(endTime.getTimeInMillis()), startDay, endDay);
 
         // Check that ST-->DST (Sunday is missing one hour) is handled
         t1 = getUtcTimeStamp(2006, Calendar.APRIL, 4, 0, 0, 0);

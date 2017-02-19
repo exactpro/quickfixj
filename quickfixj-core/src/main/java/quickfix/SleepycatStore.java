@@ -21,6 +21,7 @@ package quickfix;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -258,8 +259,8 @@ public class SleepycatStore implements MessageStore {
         throw ioe;
     }
 
-    public Date getCreationTime() throws IOException {
-        return info.getCreationTime().getTime();
+    public Timestamp getCreationTime() throws IOException {
+        return new Timestamp(info.getCreationTime().getTimeInMillis());
     }
 
     public int getNextSenderMsgSeqNum() throws IOException {

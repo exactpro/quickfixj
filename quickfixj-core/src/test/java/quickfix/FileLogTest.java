@@ -24,7 +24,7 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Date;
+import java.sql.Timestamp;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -73,7 +73,7 @@ public class FileLogTest {
         log.onEvent("EVENTTEST");
         log.close();
 
-        String formattedTime = UtcTimestampConverter.convert(new Date(systemTime), false);
+        String formattedTime = UtcTimestampConverter.convert(new Timestamp(systemTime), false, false);
         assertEquals("wrong message", formattedTime + ": EVENTTEST\n", readLog(log
                 .getEventFileName()));
 
@@ -147,7 +147,7 @@ public class FileLogTest {
         FileLog log = (FileLog) factory.create(sessionID);
         log.setSyncAfterWrite(true);
 
-        String formattedTime = UtcTimestampConverter.convert(new Date(systemTime), false);
+        String formattedTime = UtcTimestampConverter.convert(new Timestamp(systemTime), false, false);
 
         String prefix = sessionID.getBeginString() + "-" + sessionID.getSenderCompID() + "-"
                 + sessionID.getTargetCompID();
@@ -178,7 +178,28 @@ public class FileLogTest {
         log.setSyncAfterWrite(true);
 
         log.onEvent("EVENTTEST");
-        String formattedTime = UtcTimestampConverter.convert(new Date(systemTime), true);
+        String formattedTime = UtcTimestampConverter.convert(new Timestamp(systemTime), true, false);
+        assertEquals("wrong message", formattedTime + ": EVENTTEST\n", readLog(log
+                .getEventFileName()));
+    }
+    
+    @Test
+    public void testLogWithMicrosInTimestamp() throws Exception {
+        long systemTime = System.currentTimeMillis();
+        SystemTime.setTimeSource(new MockSystemTimeSource(systemTime));
+        SessionID sessionID = new SessionID("FIXT.1.1", "SENDER" + systemTime, "TARGET" + systemTime);
+
+        SessionSettings settings = new SessionSettings();
+        settings.setString(sessionID, FileLogFactory.SETTING_FILE_LOG_PATH, getTempDirectory());
+        settings.setBool(sessionID, FileLogFactory.SETTING_INCLUDE_MILLIS_IN_TIMESTAMP, true);
+        settings.setBool(sessionID, FileLogFactory.SETTING_INCLUDE_MICROS_IN_TIMESTAMP, true);
+
+        FileLogFactory factory = new FileLogFactory(settings);
+        FileLog log = (FileLog) factory.create(sessionID);
+        log.setSyncAfterWrite(true);
+
+        log.onEvent("EVENTTEST");
+        String formattedTime = UtcTimestampConverter.convert(new Timestamp(systemTime), true, true);
         assertEquals("wrong message", formattedTime + ": EVENTTEST\n", readLog(log
                 .getEventFileName()));
     }

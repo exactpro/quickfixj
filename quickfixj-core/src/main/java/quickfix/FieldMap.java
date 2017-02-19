@@ -21,9 +21,9 @@ package quickfix;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -171,23 +171,23 @@ public abstract class FieldMap implements Serializable {
         setField(new StringField(field, DecimalConverter.convert(value, padding)));
     }
 
-    public void setUtcTimeStamp(int field, Date value) {
-        setUtcTimeStamp(field, value, false);
+    public void setUtcTimeStamp(int field, Timestamp value) {
+        setUtcTimeStamp(field, value, false, false);
     }
 
-    public void setUtcTimeStamp(int field, Date value, boolean includeMilliseconds) {
-        setField(new StringField(field, UtcTimestampConverter.convert(value, includeMilliseconds)));
+    public void setUtcTimeStamp(int field, Timestamp value, boolean includeMilliseconds, boolean includeMicroseconds) {
+        setField(new StringField(field, UtcTimestampConverter.convert(value, includeMilliseconds, includeMicroseconds)));
     }
 
-    public void setUtcTimeOnly(int field, Date value) {
-        setUtcTimeOnly(field, value, false);
+    public void setUtcTimeOnly(int field, Timestamp value) {
+        setUtcTimeOnly(field, value, false, false);
     }
 
-    public void setUtcTimeOnly(int field, Date value, boolean includeMillseconds) {
-        setField(new StringField(field, UtcTimeOnlyConverter.convert(value, includeMillseconds)));
+    public void setUtcTimeOnly(int field, Timestamp value, boolean includeMillseconds, boolean includeMicroseconds) {
+        setField(new StringField(field, UtcTimeOnlyConverter.convert(value, includeMillseconds, includeMicroseconds)));
     }
 
-    public void setUtcDateOnly(int field, Date value) {
+    public void setUtcDateOnly(int field, Timestamp value) {
         setField(new StringField(field, UtcDateOnlyConverter.convert(value)));
     }
 
@@ -251,7 +251,7 @@ public abstract class FieldMap implements Serializable {
         }
     }
 
-    public Date getUtcTimeStamp(int field) throws FieldNotFound {
+    public Timestamp getUtcTimeStamp(int field) throws FieldNotFound {
         try {
             return UtcTimestampConverter.convert(getString(field));
         } catch (final FieldConvertError e) {
@@ -259,7 +259,7 @@ public abstract class FieldMap implements Serializable {
         }
     }
 
-    public Date getUtcTimeOnly(int field) throws FieldNotFound {
+    public Timestamp getUtcTimeOnly(int field) throws FieldNotFound {
         try {
             return UtcTimeOnlyConverter.convert(getString(field));
         } catch (final FieldConvertError e) {
@@ -267,7 +267,7 @@ public abstract class FieldMap implements Serializable {
         }
     }
 
-    public Date getUtcDateOnly(int field) throws FieldNotFound {
+    public Timestamp getUtcDateOnly(int field) throws FieldNotFound {
         try {
             return UtcDateOnlyConverter.convert(getString(field));
         } catch (final FieldConvertError e) {
@@ -307,11 +307,11 @@ public abstract class FieldMap implements Serializable {
     }
 
     public void setField(UtcTimeStampField field) {
-        setUtcTimeStamp(field.getField(), field.getValue(), field.showMilliseconds());
+        setUtcTimeStamp(field.getField(), field.getValue(), field.showMilliseconds(), field.showMicroseconds());
     }
 
     public void setField(UtcTimeOnlyField field) {
-        setUtcTimeOnly(field.getField(), field.getValue(), field.showMilliseconds());
+        setUtcTimeOnly(field.getField(), field.getValue(), field.showMilliseconds(), field.showMicroseconds());
     }
 
     public void setField(UtcDateOnlyField field) {

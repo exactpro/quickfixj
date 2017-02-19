@@ -28,7 +28,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
-import java.util.Date;
+import java.sql.Timestamp;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -134,7 +134,7 @@ public class ThreadPerSessionEventHandlingStrategyTest {
         message.getHeader().setString(SenderCompID.FIELD, "ISLD");
         message.getHeader().setString(TargetCompID.FIELD, "TW");
         message.getHeader().setString(SendingTime.FIELD,
-                UtcTimestampConverter.convert(new Date(), false));
+                UtcTimestampConverter.convert(new Timestamp(System.currentTimeMillis()), false, false));
         message.getHeader().setInt(MsgSeqNum.FIELD, 1);
         message.setInt(HeartBtInt.FIELD, 30);
 
@@ -202,7 +202,7 @@ public class ThreadPerSessionEventHandlingStrategyTest {
         message.getHeader().setString(SenderCompID.FIELD, "ISLD");
         message.getHeader().setString(TargetCompID.FIELD, "TW");
         message.getHeader().setString(SendingTime.FIELD,
-                UtcTimestampConverter.convert(new Date(), false));
+                UtcTimestampConverter.convert(new Timestamp(System.currentTimeMillis()), false, false));
         message.getHeader().setInt(MsgSeqNum.FIELD, 1);
         message.setInt(HeartBtInt.FIELD, 30);
 

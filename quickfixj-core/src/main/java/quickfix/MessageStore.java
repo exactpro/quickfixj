@@ -20,8 +20,8 @@
 package quickfix;
 
 import java.util.Collection;
-import java.util.Date;
 import java.io.IOException;
+import java.sql.Timestamp;
 
 /**
  * Used by a Session to store and retrieve messages for resend purposes.
@@ -71,7 +71,7 @@ public interface MessageStore {
      * @return the session creation time.
      * @throws IOException IO error
      */
-    Date getCreationTime() throws IOException;
+    Timestamp getCreationTime() throws IOException;
 
     /**
      * Reset the message store. Sequence numbers are set back to 1 and stored

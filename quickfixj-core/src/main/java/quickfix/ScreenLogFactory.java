@@ -33,6 +33,7 @@ public class ScreenLogFactory implements LogFactory {
     private boolean events;
     private boolean heartBeats;
     private boolean includeMillis;
+    private boolean includeMicros;
 
     /**
      * Enables incoming message logging.
@@ -72,6 +73,12 @@ public class ScreenLogFactory implements LogFactory {
      */
     public static final String SETTING_INCLUDE_MILLIS_IN_TIMESTAMP = "ScreenIncludeMilliseconds";
 
+    /**
+     * Specify whether to include microseconds in log output time stamps. Off, by
+     * default.
+     */
+    public static final String SETTING_INCLUDE_MICROS_IN_TIMESTAMP = "ScreenIncludeMicroseconds";
+    
     /**
      * Create factory using configuration in session settings.
      *
@@ -125,7 +132,9 @@ public class ScreenLogFactory implements LogFactory {
                     heartBeats);
             includeMillis = getBooleanSetting(sessionID,
                     ScreenLogFactory.SETTING_INCLUDE_MILLIS_IN_TIMESTAMP, false);
-            return new ScreenLog(incoming, outgoing, events, heartBeats, includeMillis, sessionID, System.out);
+            includeMicros = getBooleanSetting(sessionID,
+                    ScreenLogFactory.SETTING_INCLUDE_MICROS_IN_TIMESTAMP, false);
+            return new ScreenLog(incoming, outgoing, events, heartBeats, includeMillis, includeMicros, sessionID, System.out);
         } catch (FieldConvertError e) {
             throw new RuntimeError(e);
         } catch (ConfigError e) {

@@ -20,9 +20,9 @@
 package quickfix;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 
 import org.slf4j.LoggerFactory;
@@ -65,8 +65,8 @@ public class MemoryStore implements MessageStore {
         throw new UnsupportedOperationException("not supported");
     }
 
-    public Date getCreationTime() throws IOException {
-        return creationTime.getTime();
+    public Timestamp getCreationTime() throws IOException {
+        return new Timestamp(creationTime.getTimeInMillis());
     }
 
     /* package */void setCreationTime(Calendar creationTime) {

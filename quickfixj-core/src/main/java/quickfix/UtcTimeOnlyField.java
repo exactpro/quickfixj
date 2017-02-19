@@ -19,34 +19,40 @@
 
 package quickfix;
 
-import java.util.Date;
+import java.sql.Timestamp;
 
 /*
  * A time-valued message field.
  */
 public class UtcTimeOnlyField extends DateField {
     private boolean includeMilliseconds = true;
+    private boolean includeMicroseconds = true;
 
     public UtcTimeOnlyField(int field) {
         super(field);
     }
 
-    protected UtcTimeOnlyField(int field, Date data) {
+    protected UtcTimeOnlyField(int field, Timestamp data) {
         super(field, data);
     }
 
-    public UtcTimeOnlyField(int field, boolean includeMilliseconds) {
+    public UtcTimeOnlyField(int field, boolean includeMilliseconds, boolean includeMicroseconds) {
         super(field);
         this.includeMilliseconds = includeMilliseconds;
+        this.includeMicroseconds = includeMicroseconds;
     }
 
-    protected UtcTimeOnlyField(int field, Date data, boolean includeMilliseconds) {
+    protected UtcTimeOnlyField(int field, Timestamp data, boolean includeMilliseconds, boolean includeMicroseconds) {
         super(field, data);
         this.includeMilliseconds = includeMilliseconds;
+        this.includeMicroseconds = includeMicroseconds;
     }
 
     boolean showMilliseconds() {
         return includeMilliseconds;
     }
-
+    
+    boolean showMicroseconds() {
+    	return includeMicroseconds;
+    }
 }

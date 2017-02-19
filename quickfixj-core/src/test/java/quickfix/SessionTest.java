@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -89,10 +90,10 @@ public class SessionTest {
 
         final Session session = new Session(application,
                 mockMessageStoreFactory, sessionID, null, null, mockLogFactory,
-                new DefaultMessageFactory(), 30, false, 30, true, true, false,
-                false, false, false, false, true, false, 1.5, null, true,
-                new int[] { 5 }, false, false, false, true, false, true, false,
-                null, true, 0, false, false, true, true);
+                new DefaultMessageFactory(), 30, false, 30, true, false, true,
+                false, false, false, false, false, true, false, 1.5, null,
+                true, new int[] { 5 }, false, false, false, true, false, true,
+                false, null, true, 0, false, false, true, true);
 
         // Simulate socket disconnect
         session.setResponder(null);
@@ -132,10 +133,10 @@ public class SessionTest {
 
         final Session session = new Session(application,
                 mockMessageStoreFactory, sessionID, null, null, mockLogFactory,
-                new DefaultMessageFactory(), 30, false, 30, true, true, false,
-                false, false, false, false, true, false, 1.5, null, true,
-                new int[] { 5 }, false, false, false, true, false, true, false,
-                null, true, 0, false, false, true, true);
+                new DefaultMessageFactory(), 30, false, 30, true, false, true,
+                false, false, false, false, false, true, false, 1.5, null,
+                true, new int[] { 5 }, false, false, false, true, false, true,
+                false, null, true, 0, false, false, true, true);
 
         // Simulate socket disconnect
         session.setResponder(null);
@@ -815,7 +816,7 @@ public class SessionTest {
             // removing the file does NOT trigger the reset in the Session
             // constructor, so we fake an outdated session
             sessionTimeOutput.writeUTF(UtcTimestampConverter.convert(
-                    new Date(0), true));
+                    new Timestamp(0), true, false));
         } finally {
             sessionTimeOutput.close();
         }
@@ -926,7 +927,7 @@ public class SessionTest {
         message.getHeader().setString(SenderCompID.FIELD, "SENDER");
         message.getHeader().setString(TargetCompID.FIELD, "TARGET");
         message.getHeader().setString(SendingTime.FIELD,
-                UtcTimestampConverter.convert(new Date(0), false));
+                UtcTimestampConverter.convert(new Timestamp(0), false, false));
         message.getHeader().setInt(MsgSeqNum.FIELD, 1);
 
         final SessionStateListener mockStateListener = mock(SessionStateListener.class);
@@ -950,7 +951,7 @@ public class SessionTest {
         message.getHeader().setString(SenderCompID.FIELD, "SENDER");
         message.getHeader().setString(TargetCompID.FIELD, "TARGET");
         message.getHeader().setString(SendingTime.FIELD,
-                UtcTimestampConverter.convert(new Date(), false));
+                UtcTimestampConverter.convert(new Timestamp(System.currentTimeMillis()), false, false));
         message.getHeader().setInt(MsgSeqNum.FIELD, 100);
 
         final SessionStateListener mockStateListener = mock(SessionStateListener.class);
@@ -1382,7 +1383,7 @@ public class SessionTest {
         msg.getHeader().setString(SenderCompID.FIELD, "TARGET");
         msg.getHeader().setString(TargetCompID.FIELD, "SENDER");
         msg.getHeader().setInt(MsgSeqNum.FIELD, sequence);
-        msg.getHeader().setUtcTimeStamp(SendingTime.FIELD, new Date());
+        msg.getHeader().setUtcTimeStamp(SendingTime.FIELD, new Timestamp(System.currentTimeMillis()));
         return msg;
     }
 
@@ -1391,7 +1392,7 @@ public class SessionTest {
         msg.getHeader().setString(SenderCompID.FIELD, "TARGET");
         msg.getHeader().setString(TargetCompID.FIELD, "SENDER");
         msg.getHeader().setInt(MsgSeqNum.FIELD, sequence);
-        msg.getHeader().setUtcTimeStamp(SendingTime.FIELD, new Date());
+        msg.getHeader().setUtcTimeStamp(SendingTime.FIELD, new Timestamp(System.currentTimeMillis()));
         return msg;
     }
 
@@ -1400,7 +1401,7 @@ public class SessionTest {
         msg.getHeader().setString(SenderCompID.FIELD, "TARGET");
         msg.getHeader().setString(TargetCompID.FIELD, "SENDER");
         msg.getHeader().setInt(MsgSeqNum.FIELD, sequence);
-        msg.getHeader().setUtcTimeStamp(SendingTime.FIELD, new Date());
+        msg.getHeader().setUtcTimeStamp(SendingTime.FIELD, new Timestamp(System.currentTimeMillis()));
         msg.setInt(RefSeqNum.FIELD, refSeqNum);
         return msg;
     }
@@ -1410,7 +1411,7 @@ public class SessionTest {
         msg.getHeader().setString(SenderCompID.FIELD, "TARGET");
         msg.getHeader().setString(TargetCompID.FIELD, "SENDER");
         msg.getHeader().setInt(MsgSeqNum.FIELD, sequence);
-        msg.getHeader().setUtcTimeStamp(SendingTime.FIELD, new Date());
+        msg.getHeader().setUtcTimeStamp(SendingTime.FIELD, new Timestamp(System.currentTimeMillis()));
         msg.setInt(BeginSeqNo.FIELD, from);
         msg.setInt(EndSeqNo.FIELD, 0);
         return msg;
@@ -1421,9 +1422,9 @@ public class SessionTest {
         msg.getHeader().setString(SenderCompID.FIELD, "TARGET");
         msg.getHeader().setString(TargetCompID.FIELD, "SENDER");
         msg.getHeader().setInt(MsgSeqNum.FIELD, sequence);
-        msg.getHeader().setUtcTimeStamp(SendingTime.FIELD, new Date());
+        msg.getHeader().setUtcTimeStamp(SendingTime.FIELD, new Timestamp(System.currentTimeMillis()));
         msg.getHeader().setBoolean(PossDupFlag.FIELD, true);
-        msg.getHeader().setUtcTimeStamp(OrigSendingTime.FIELD, new Date());
+        msg.getHeader().setUtcTimeStamp(OrigSendingTime.FIELD, new Timestamp(System.currentTimeMillis()));
         msg.setBoolean(GapFillFlag.FIELD, gapFill);
         msg.setInt(NewSeqNo.FIELD, to);
         return msg;
@@ -1540,7 +1541,7 @@ public class SessionTest {
         news.getHeader().setString(SenderCompID.FIELD, "TARGET");
         news.getHeader().setString(TargetCompID.FIELD, "SENDER");
         news.getHeader().setInt(MsgSeqNum.FIELD, sequence);
-        news.getHeader().setUtcTimeStamp(SendingTime.FIELD, new Date());
+        news.getHeader().setUtcTimeStamp(SendingTime.FIELD, new Timestamp(System.currentTimeMillis()));
         return news;
     }
 
@@ -1597,7 +1598,7 @@ public class SessionTest {
                 new SenderCompID(sessionID.getTargetCompID()));
         resendRequest.getHeader().setField(
                 new TargetCompID(sessionID.getSenderCompID()));
-        resendRequest.getHeader().setField(new SendingTime(new Date()));
+        resendRequest.getHeader().setField(new SendingTime(new Timestamp(System.currentTimeMillis())));
         resendRequest.getHeader().setField(new MsgSeqNum(200));
         resendRequest.set(new BeginSeqNo(1));
         resendRequest.set(new EndSeqNo(100));
@@ -1624,7 +1625,7 @@ public class SessionTest {
         logout.getHeader().setString(SenderCompID.FIELD, "TARGET");
         logout.getHeader().setString(TargetCompID.FIELD, "SENDER");
         logout.getHeader().setString(SendingTime.FIELD,
-                UtcTimestampConverter.convert(new Date(), false));
+                UtcTimestampConverter.convert(new Timestamp(System.currentTimeMillis()), false, false));
         logout.getHeader().setInt(MsgSeqNum.FIELD, 2);
         session.next(logout);
 
@@ -1648,7 +1649,7 @@ public class SessionTest {
         logout.getHeader().setString(SenderCompID.FIELD, "TARGET");
         logout.getHeader().setString(TargetCompID.FIELD, "SENDER");
         logout.getHeader().setString(SendingTime.FIELD,
-                UtcTimestampConverter.convert(new Date(), false));
+                UtcTimestampConverter.convert(new Timestamp(System.currentTimeMillis()), false, false));
         logout.getHeader().setInt(MsgSeqNum.FIELD, 2);
 
         logonTo(session);
@@ -1809,10 +1810,10 @@ public class SessionTest {
                 new MemoryStoreFactory(), sessionID, null, null,
                 new ScreenLogFactory(true, true, true),
                 new DefaultMessageFactory(), isInitiator ? 30 : 0, false, 30,
-                true, resetOnLogon, false, false, false, false, false, true,
-                false, 1.5, null, validateSequenceNumbers, new int[] { 5 },
-                false, false, false, true, false, true, false, null, true,
-                chunkSize, false, false, true, true);
+                true, false, resetOnLogon, false, false, false, false, false,
+                true, false, 1.5, null, validateSequenceNumbers,
+                new int[] { 5 }, false, false, false, true, false, true, false, null,
+                true, chunkSize, false, false, true, true);
 
         UnitTestResponder responder = new UnitTestResponder();
         session.setResponder(responder);
@@ -1875,10 +1876,10 @@ public class SessionTest {
                 new MemoryStoreFactory(), sessionID, null, null,
                 new ScreenLogFactory(true, true, true),
                 new DefaultMessageFactory(), isInitiator ? 30 : 0, false, 30,
-                true, resetOnLogon, false, false, false, false, false, true,
-                false, 1.5, null, validateSequenceNumbers, new int[] { 5 },
-                false, disconnectOnError, false, true, false, true, false,
-                null, true, 0, false, false, true, true);
+                true, false, resetOnLogon, false, false, false, false, false,
+                true, false, 1.5, null, validateSequenceNumbers,
+                new int[] { 5 }, false, disconnectOnError, false, true, false, true,
+                false, null, true, 0, false, false, true, true);
 
         UnitTestResponder responder = new UnitTestResponder();
         session.setResponder(responder);
@@ -1932,10 +1933,10 @@ public class SessionTest {
 
         Session session = new Session(unitTestApplication, new MemoryStoreFactory(),
                 sessionID, null, null, null,
-                new DefaultMessageFactory(), isInitiator ? 30 : 0, false, 30, true, resetOnLogon,
-                false, false, false, false, false, true, false, 1.5, null, validateSequenceNumbers,
-                new int[]{5}, false, false, false, true, false, true, false, null, true, 0,
-                false, false, true, true);
+                new DefaultMessageFactory(), isInitiator ? 30 : 0, false, 30, true, false,
+                resetOnLogon, false, false, false, false, false, true, false, 1.5, null,
+                validateSequenceNumbers, new int[]{5}, false, false, false, true, false, true, false, null, true,
+                0, false, false, true, true);
 
         UnitTestResponder responder = new UnitTestResponder();
         session.setResponder(responder);
@@ -2030,7 +2031,7 @@ public class SessionTest {
         try {
             Date d = news.getHeader().getUtcTimeStamp(SendingTime.FIELD);
             news.getHeader().setUtcTimeStamp(OrigSendingTime.FIELD,
-                    new Date(d.getTime() - 3600 * 1000)); // 1 hour back
+                    new Timestamp(d.getTime() - 3600 * 1000)); // 1 hour back
         } catch (FieldNotFound e) {
             throw new RuntimeException();
         }
@@ -2095,7 +2096,7 @@ public class SessionTest {
         header.setString(SenderCompID.FIELD, sessionID.getSenderCompID());
         header.setString(TargetCompID.FIELD, sessionID.getTargetCompID());
         header.setInt(MsgSeqNum.FIELD, responseSequenceNumber);
-        header.setUtcTimeStamp(SendingTime.FIELD, SystemTime.getDate(), true);
+        header.setUtcTimeStamp(SendingTime.FIELD, SystemTime.getDate(), true, false);
         return logonResponse;
     }
 

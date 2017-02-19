@@ -19,6 +19,7 @@
 
 package quickfix;
 
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -167,10 +168,13 @@ public class FieldConvertersTest extends TestCase {
         Calendar c = new GregorianCalendar(2000, 3, 26, 12, 5, 6);
         c.setTimeZone(TimeZone.getTimeZone("UTC"));
         c.set(Calendar.MILLISECOND, 555);
-        assertEquals("20000426-12:05:06", UtcTimestampConverter.convert(c
-                .getTime(), false));
-        assertEquals("20000426-12:05:06.555", UtcTimestampConverter.convert(c
-                .getTime(), true));
+        Timestamp timestamp = new Timestamp(c.getTimeInMillis());
+        assertEquals("20000426-12:05:06", UtcTimestampConverter.convert(timestamp,
+        		false, false));
+        assertEquals("20000426-12:05:06.555", UtcTimestampConverter.convert(timestamp,
+        		true, false));
+        assertEquals("20000426-12:05:06.555000", UtcTimestampConverter.convert(timestamp,
+        		true, true));
 
         Date date = UtcTimestampConverter.convert("20000426-12:05:06.555");
         c.setTime(date);
@@ -217,10 +221,13 @@ public class FieldConvertersTest extends TestCase {
         Calendar c = new GregorianCalendar(0, 0, 0, 12, 5, 6);
         c.setTimeZone(TimeZone.getTimeZone("UTC"));
         c.set(Calendar.MILLISECOND, 555);
-        assertEquals("12:05:06", UtcTimeOnlyConverter.convert(c.getTime(),
-                false));
-        assertEquals("12:05:06.555", UtcTimeOnlyConverter.convert(c.getTime(),
-                true));
+        Timestamp timestamp = new Timestamp(c.getTimeInMillis());
+        assertEquals("12:05:06", UtcTimeOnlyConverter.convert(timestamp,
+                false, false));
+        assertEquals("12:05:06.555", UtcTimeOnlyConverter.convert(timestamp,
+                true, false));
+        assertEquals("12:05:06.555000", UtcTimeOnlyConverter.convert(timestamp,
+                true, true));
 
         Date date = UtcTimeOnlyConverter.convert("12:05:06.555");
         c.setTime(date);

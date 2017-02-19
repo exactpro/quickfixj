@@ -30,6 +30,7 @@ subprojects {
     apply plugin: 'maven'
 
     group = 'com.exactprosystems.testtools'
+    version = '1.6.0.1-SNAPSHOT'
 
     sourceCompatibility = 1.7 //Java version compatibility to use when compiling Java source.
     targetCompatibility = 1.7 //Java version to generate classes for.

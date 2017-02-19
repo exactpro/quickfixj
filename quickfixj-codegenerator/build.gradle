@@ -1,6 +1,5 @@
 apply plugin: 'artifactory'
 
-version 			= '1.6.0-SNAPSHOT'
 archivesBaseName 	= 'quickfixj-code-generator'
 
 test.enabled = false

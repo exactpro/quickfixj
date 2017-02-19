@@ -19,30 +19,30 @@
 
 package quickfix;
 
-import java.util.Date;
+import java.sql.Timestamp;
 
 /**
  * A date-valued message field.
  */
-public class DateField extends Field<Date> {
+public class DateField extends Field<Timestamp> {
 
     protected DateField(int field) {
-        super(field, new Date());
+        super(field, new Timestamp(System.currentTimeMillis()));
     }
 
-    protected DateField(int field, Date data) {
+    protected DateField(int field, Timestamp data) {
         super(field, data);
     }
 
-    public void setValue(Date value) {
+    public void setValue(Timestamp value) {
         setObject(value);
     }
 
-    public Date getValue() {
+    public Timestamp getValue() {
         return getObject();
     }
 
-    public boolean valueEquals(Date value) {
+    public boolean valueEquals(Timestamp value) {
         return getValue().equals(value);
     }
 }

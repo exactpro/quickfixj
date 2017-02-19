@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
 import java.util.TimeZone;
 
 import javax.sql.DataSource;
@@ -151,7 +150,7 @@ class JdbcStore implements MessageStore {
                 extendedSessionIdSupported, defaultSessionIdPropertyValue);
     }
 
-    public Date getCreationTime() throws IOException {
+    public Timestamp getCreationTime() throws IOException {
         return cache.getCreationTime();
     }
 

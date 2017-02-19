@@ -7,7 +7,7 @@ import quickfix.field.EffectiveTime;
 import quickfix.field.MDEntryTime;
 import quickfix.field.converter.UtcTimeOnlyConverter;
 
-import java.util.Date;
+import java.sql.Timestamp;
 import java.util.Iterator;
 
 /**
@@ -28,28 +28,54 @@ public class FieldMapTest extends TestCase {
 
     public void testSetUtcTimeStampField() throws Exception {
         FieldMap map = new Message();
-        Date aDate = new Date();
-        map.setField(new UtcTimeStampField(EffectiveTime.FIELD, aDate, false));
+        Timestamp aDate = new Timestamp(System.currentTimeMillis());
+        map.setField(new UtcTimeStampField(EffectiveTime.FIELD, aDate, false, false));
+        Timestamp actual = map.getField(new EffectiveTime()).getValue();
         assertEquals("milliseconds should not be preserved", aDate.getTime() - (aDate.getTime() % 1000),
-                    map.getField(new EffectiveTime()).getValue().getTime());
+        		actual.getTime());
+        assertEquals("milliseconds should not be preserved", 0, actual.getNanos());
 
         // now set it with preserving millis
-        map.setField(new UtcTimeStampField(EffectiveTime.FIELD, aDate, true));
+        map.setField(new UtcTimeStampField(EffectiveTime.FIELD, aDate, true, false));
+        actual = map.getField(new EffectiveTime()).getValue();
         assertEquals("milliseconds should be preserved", aDate.getTime(),
+                    actual.getTime());
+        assertEquals("milliseconds should be preserved", (aDate.getTime() % 1_000) * 1_000_000, actual.getNanos());
+        
+     // now set it with preserving micros
+        map.setField(new UtcTimeStampField(EffectiveTime.FIELD, aDate, true, true));
+        actual = map.getField(new EffectiveTime()).getValue();
+        assertEquals("microseconds should be preserved", aDate.getTime(),
                     map.getField(new EffectiveTime()).getValue().getTime());
+        assertEquals("microseconds should be preserved", aDate.getNanos(), actual.getNanos());
+        
+        map.setField(new UtcTimeStampField(EffectiveTime.FIELD, aDate, false, true));
+        actual = map.getField(new EffectiveTime()).getValue();
+        assertEquals("microseconds should be preserved", aDate.getTime(),
+                    map.getField(new EffectiveTime()).getValue().getTime());
+        assertEquals("microseconds should be preserved", aDate.getNanos(), actual.getNanos());
     }
 
     public void testSetUtcTimeOnlyField() throws Exception {
         FieldMap map = new Message();
-        Date aDate = new Date();
-        map.setField(new UtcTimeOnlyField(MDEntryTime.FIELD, aDate, false));
-        assertEquals("milliseconds should not be preserved", UtcTimeOnlyConverter.convert(aDate, false),
-                    UtcTimeOnlyConverter.convert(map.getField(new MDEntryTime()).getValue(), false));
+        Timestamp aDate = new Timestamp(System.currentTimeMillis());
+        map.setField(new UtcTimeOnlyField(MDEntryTime.FIELD, aDate, false, false));
+        assertEquals("milliseconds should not be preserved", UtcTimeOnlyConverter.convert(aDate, false, false),
+                    UtcTimeOnlyConverter.convert(map.getField(new MDEntryTime()).getValue(), false, false));
 
         // now set it with preserving millis
-        map.setField(new UtcTimeOnlyField(MDEntryTime.FIELD, aDate, true));
-        assertEquals("milliseconds should be preserved", UtcTimeOnlyConverter.convert(aDate, true),
-                    UtcTimeOnlyConverter.convert(map.getField(new MDEntryTime()).getValue(), true));
+        map.setField(new UtcTimeOnlyField(MDEntryTime.FIELD, aDate, true, false));
+        assertEquals("milliseconds should be preserved", UtcTimeOnlyConverter.convert(aDate, true, false),
+                    UtcTimeOnlyConverter.convert(map.getField(new MDEntryTime()).getValue(), true, false));
+        
+        // now set it with preserving micros
+        map.setField(new UtcTimeOnlyField(MDEntryTime.FIELD, aDate, false, true));
+        assertEquals("microseconds should be preserved", UtcTimeOnlyConverter.convert(aDate, false, true),
+                    UtcTimeOnlyConverter.convert(map.getField(new MDEntryTime()).getValue(), false, true));
+        
+        map.setField(new UtcTimeOnlyField(MDEntryTime.FIELD, aDate, true, true));
+        assertEquals("microseconds should be preserved", UtcTimeOnlyConverter.convert(aDate, true, true),
+                    UtcTimeOnlyConverter.convert(map.getField(new MDEntryTime()).getValue(), true, true));
     }
 
     /**
@@ -57,13 +83,18 @@ public class FieldMapTest extends TestCase {
      */
     public void testSpecificFields() throws Exception {
         FieldMap map = new Message();
-        Date aDate = new Date();
+        Timestamp aDate = new Timestamp(System.currentTimeMillis());
         map.setField(new EffectiveTime(aDate));
         assertEquals("milliseconds should be preserved", aDate.getTime(),
                     map.getField(new EffectiveTime()).getValue().getTime());
         map.setField(new MDEntryTime(aDate));
-        assertEquals("milliseconds should be preserved", UtcTimeOnlyConverter.convert(aDate, true),
-                    UtcTimeOnlyConverter.convert(map.getField(new MDEntryTime()).getValue(), true));
+        assertEquals("milliseconds should be preserved", UtcTimeOnlyConverter.convert(aDate, true, false),
+                    UtcTimeOnlyConverter.convert(map.getField(new MDEntryTime()).getValue(), true, false));
+        
+        assertEquals("microseconds should be preserved", UtcTimeOnlyConverter.convert(aDate, false, true),
+                UtcTimeOnlyConverter.convert(map.getField(new MDEntryTime()).getValue(), false, true));
+        assertEquals("microseconds should be preserved", UtcTimeOnlyConverter.convert(aDate, true, true),
+                UtcTimeOnlyConverter.convert(map.getField(new MDEntryTime()).getValue(), true, true));
     }
 
     private void testOrdering(int[] vals, int[] order, int[] expected) {

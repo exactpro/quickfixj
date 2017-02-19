@@ -61,7 +61,7 @@ package <xsl:value-of select="$fieldPackage"/>;
 
 import quickfix.<xsl:call-template name="get-field-type"/>Field;
 <xsl:if test="@type='UTCTIMESTAMP' or @type='UTCTIMEONLY' or @type='UTCDATE' or @type='UTCDATEONLY'">
-import java.util.Date;</xsl:if>
+import java.sql.Timestamp;</xsl:if>
 
 public class <xsl:value-of select="@name"/> extends <xsl:call-template name="get-field-type"/>Field {
 
@@ -74,7 +74,7 @@ public class <xsl:value-of select="@name"/> extends <xsl:call-template name="get
 	}
 
 	public <xsl:value-of select="@name"/>(<xsl:call-template name="get-type"/> data) {
-		super(<xsl:value-of select="@number"/>, data<xsl:if test="@type='UTCTIMESTAMP' or @type='UTCTIMEONLY'">, true</xsl:if>);
+		super(<xsl:value-of select="@number"/>, data<xsl:if test="@type='UTCTIMESTAMP' or @type='UTCTIMEONLY'">, true, true</xsl:if>);
 	}
 	<xsl:variable name="dataType"><xsl:call-template name="get-type"/></xsl:variable>
 
@@ -95,10 +95,10 @@ public class <xsl:value-of select="@name"/> extends <xsl:call-template name="get
      <xsl:when test="@type='AMT'"><xsl:value-of select="$decimalType"/></xsl:when>
      <xsl:when test="@type='QTY'"><xsl:value-of select="$decimalType"/></xsl:when>
      <xsl:when test="@type='CURRENCY'">String</xsl:when>
-     <xsl:when test="@type='UTCTIMESTAMP'">Date</xsl:when>
-     <xsl:when test="@type='UTCTIMEONLY'">Date</xsl:when>
-     <xsl:when test="@type='UTCDATE'">Date</xsl:when>
-     <xsl:when test="@type='UTCDATEONLY'">Date</xsl:when>
+     <xsl:when test="@type='UTCTIMESTAMP'">Timestamp</xsl:when>
+     <xsl:when test="@type='UTCTIMEONLY'">Timestamp</xsl:when>
+     <xsl:when test="@type='UTCDATE'">Timestamp</xsl:when>
+     <xsl:when test="@type='UTCDATEONLY'">Timestamp</xsl:when>
      <xsl:when test="@type='BOOLEAN'">boolean</xsl:when>
      <xsl:when test="@type='FLOAT'">double</xsl:when>
      <xsl:when test="@type='PRICEOFFSET'"><xsl:value-of select="$decimalType"/></xsl:when>

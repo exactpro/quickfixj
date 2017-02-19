@@ -7,7 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
-import java.util.Date;
+import java.sql.Timestamp;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -58,7 +58,7 @@ public class SessionResetTest {
         header.setString(SenderCompID.FIELD, sessionID.getSenderCompID());
         header.setString(TargetCompID.FIELD, sessionID.getTargetCompID());
         header.setInt(MsgSeqNum.FIELD, 1);
-        header.setUtcTimeStamp(SendingTime.FIELD, SystemTime.getDate(), true);
+        header.setUtcTimeStamp(SendingTime.FIELD, SystemTime.getDate(), true, false);
 
         Thread resetThread = new Thread(new Runnable() {
             public void run() {
@@ -97,7 +97,7 @@ public class SessionResetTest {
         msg.getHeader().setString(SenderCompID.FIELD, "TARGET");
         msg.getHeader().setString(TargetCompID.FIELD, "SENDER");
         msg.getHeader().setInt(MsgSeqNum.FIELD, sequence);
-        msg.getHeader().setUtcTimeStamp(SendingTime.FIELD, new Date());
+        msg.getHeader().setUtcTimeStamp(SendingTime.FIELD, new Timestamp(System.currentTimeMillis()));
         return msg;
     }
 

@@ -50,8 +50,9 @@ public class ScreenLog extends AbstractLog {
     private final boolean events;
 
     private final boolean includeMillis;
+    private final boolean includeMicros;
 
-    ScreenLog(boolean incoming, boolean outgoing, boolean events, boolean logHeartbeats, boolean includeMillis,
+    ScreenLog(boolean incoming, boolean outgoing, boolean events, boolean logHeartbeats, boolean includeMillis, boolean includeMicros,
             SessionID sessionID, PrintStream out) {
         setLogHeartbeats(logHeartbeats);
         this.out = out;
@@ -60,6 +61,7 @@ public class ScreenLog extends AbstractLog {
         this.events = events;
         this.sessionID = sessionID;
         this.includeMillis = includeMillis;
+        this.includeMicros = includeMicros;
     }
 
     protected void logIncoming(String message) {
@@ -89,7 +91,7 @@ public class ScreenLog extends AbstractLog {
     }
 
     private void log(String message, String type) {
-        out.println("<" + UtcTimestampConverter.convert(SystemTime.getDate(), includeMillis) + ", " + sessionID + ", "
+        out.println("<" + UtcTimestampConverter.convert(SystemTime.getDate(), includeMillis, includeMicros) + ", " + sessionID + ", "
                 + type + "> (" + message + ")");
     }
 

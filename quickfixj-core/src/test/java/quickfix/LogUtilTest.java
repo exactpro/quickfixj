@@ -22,7 +22,7 @@ package quickfix;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Date;
+import java.sql.Timestamp;
 
 import junit.framework.TestCase;
 
@@ -53,7 +53,7 @@ public class LogUtilTest extends TestCase {
             public MessageStore create(SessionID sessionID) {
                 try {
                     return new MemoryStore() {
-                        public Date getCreationTime() throws IOException {
+                        public Timestamp getCreationTime() throws IOException {
                             throw new IOException("test");
                         }
                     };
@@ -71,7 +71,7 @@ public class LogUtilTest extends TestCase {
     }
 
     private LogFactory createLogFactory(ByteArrayOutputStream data) {
-        final ScreenLog log = new ScreenLog(true, true, true, true, false, null, new PrintStream(data));
+        final ScreenLog log = new ScreenLog(true, true, true, true, false, false, null, new PrintStream(data));
         return new LogFactory() {
             public Log create(SessionID sessionID) {
                 return create(sessionID, log.getClass().getName());

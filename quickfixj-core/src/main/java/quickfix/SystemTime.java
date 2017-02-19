@@ -19,6 +19,7 @@
 
 package quickfix;
 
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -41,8 +42,8 @@ public class SystemTime {
         return systemTimeSource.getTime();
     }
 
-    public static Date getDate() {
-        return new Date(currentTimeMillis());
+    public static Timestamp getDate() {
+        return new Timestamp(currentTimeMillis());
     }
 
     public static synchronized void setTimeSource(SystemTimeSource systemTimeSource) {

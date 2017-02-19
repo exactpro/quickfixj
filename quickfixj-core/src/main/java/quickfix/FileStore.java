@@ -30,9 +30,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeMap;
@@ -152,9 +152,9 @@ public class FileStore implements MessageStore, Closeable {
         final DataOutputStream sessionTimeOutput = new DataOutputStream(new BufferedOutputStream(
                 new FileOutputStream(sessionFileName, false)));
         try {
-            final Date date = SystemTime.getDate();
+            final Timestamp date = SystemTime.getDate();
             cache.setCreationTime(SystemTime.getUtcCalendar(date));
-            sessionTimeOutput.writeUTF(UtcTimestampConverter.convert(date, true));
+            sessionTimeOutput.writeUTF(UtcTimestampConverter.convert(date, true, true));
         } finally {
             sessionTimeOutput.close();
         }
@@ -163,7 +163,7 @@ public class FileStore implements MessageStore, Closeable {
     /* (non-Javadoc)
      * @see quickfix.MessageStore#getCreationTime()
      */
-    public Date getCreationTime() throws IOException {
+    public Timestamp getCreationTime() throws IOException {
         return cache.getCreationTime();
     }
 

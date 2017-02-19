@@ -20,8 +20,8 @@
 package quickfix;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.Collection;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -369,7 +369,7 @@ public final class SessionState {
         messageStore.incrNextTargetMsgSeqNum();
     }
 
-    public Date getCreationTime() throws IOException {
+    public Timestamp getCreationTime() throws IOException {
         return messageStore.getCreationTime();
     }
 
