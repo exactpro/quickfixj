@@ -55,7 +55,7 @@ task generateMessage {
             classpath sourceSets.main.runtimeClasspath
             main 'org.quickfixj.codegenerator.MessageCodeGenerator'
             args = ["${dictDir}", './', genJavaDir]
-            jvmArgs = ['-Dgenerator.decimal=true']
+            jvmArgs = ['-Dgenerator.decimal=true',  '-Dgenerator.includeMicroseconds=true']
         }
     }
 }

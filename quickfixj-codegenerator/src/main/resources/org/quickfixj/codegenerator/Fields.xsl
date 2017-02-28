@@ -25,6 +25,7 @@
  <xsl:param name="decimalType">double</xsl:param>
  <xsl:param name="decimalConverter">Double</xsl:param>
  <xsl:param name="serialVersionUID"/> 
+ <xsl:param name="includeMicroseconds"/>
 
  <xsl:template match="text()"/>
 
@@ -74,7 +75,7 @@ public class <xsl:value-of select="@name"/> extends <xsl:call-template name="get
 	}
 
 	public <xsl:value-of select="@name"/>(<xsl:call-template name="get-type"/> data) {
-		super(<xsl:value-of select="@number"/>, data<xsl:if test="@type='UTCTIMESTAMP' or @type='UTCTIMEONLY'">, true, true</xsl:if>);
+		super(<xsl:value-of select="@number"/>, data<xsl:if test="@type='UTCTIMESTAMP' or @type='UTCTIMEONLY'">, true, <xsl:value-of select="$includeMicroseconds"/></xsl:if>);
 	}
 	<xsl:variable name="dataType"><xsl:call-template name="get-type"/></xsl:variable>
 

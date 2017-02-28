@@ -57,6 +57,7 @@ public class MessageCodeGenerator {
     private static final String BIGDECIMAL_TYPE_OPTION = "generator.decimal";
     private static final String ORDERED_FIELDS_OPTION = "generator.orderedFields";
     private static final String OVERWRITE_OPTION = "generator.overwrite";
+    private static final String INCLUDE_MICROSECONDS_OPTION = "generator.includeMicroseconds";
 
     // An arbitrary serial UID which will have to be changed when messages and fields won't be compatible with next versions in terms
     // of java serialization.
@@ -128,6 +129,7 @@ public class MessageCodeGenerator {
                     Map<String, String> parameters = new HashMap<String, String>();
                     parameters.put("fieldName", fieldName);
                     parameters.put("fieldPackage", task.getFieldPackage());
+                    parameters.put("includeMicroseconds", String.valueOf(task.isIncludeMicroseconds()));
                     if (task.isDecimalGenerated()) {
                         parameters.put("decimalType", "java.math.BigDecimal");
                         parameters.put("decimalConverter", "Decimal");
@@ -327,6 +329,7 @@ public class MessageCodeGenerator {
         private boolean orderedFields;
         private boolean useDecimal;
         private long specificationLastModified;
+        private boolean includeMicroseconds = false;
 
         public long getSpecificationLastModified() {
             return specificationLastModified;
@@ -411,6 +414,14 @@ public class MessageCodeGenerator {
 
         public boolean isDecimalGenerated() {
             return useDecimal;
+        }
+
+        public boolean isIncludeMicroseconds() {
+            return includeMicroseconds;
+        }
+
+        public void setIncludeMicroseconds(boolean includeMicroseconds) {
+            this.includeMicroseconds = includeMicroseconds;
         }
     }
 
@@ -516,6 +527,7 @@ public class MessageCodeGenerator {
                 boolean overwrite = getOption(OVERWRITE_OPTION, true);
                 boolean orderedFields = getOption(ORDERED_FIELDS_OPTION, false);
                 boolean useDecimal = getOption(BIGDECIMAL_TYPE_OPTION, false);
+                boolean includeMicroseconds = getOption(INCLUDE_MICROSECONDS_OPTION, false);
 
                 long start = System.currentTimeMillis();
                 final String[] versions = { "FIXT 1.1", "FIX 5.0", "FIX 4.4", "FIX 4.3", "FIX 4.2",
@@ -535,6 +547,7 @@ public class MessageCodeGenerator {
                     task.setOverwrite(overwrite);
                     task.setOrderedFields(orderedFields);
                     task.setDecimalGenerated(useDecimal);
+                    task.setIncludeMicroseconds(includeMicroseconds);
                     codeGenerator.generate(task);
                 }
                 double duration = System.currentTimeMillis() - start;
