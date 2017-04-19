@@ -176,6 +176,11 @@ public class FieldConvertersTest extends TestCase {
         assertEquals("20000426-12:05:06.555000", UtcTimestampConverter.convert(timestamp,
         		true, true));
 
+
+        timestamp.setNanos(timestamp.getNanos() + 123_000);
+        assertEquals("20000426-12:05:06.555123", UtcTimestampConverter.convert(timestamp,
+                true, true));
+
         Date date = UtcTimestampConverter.convert("20000426-12:05:06.555");
         c.setTime(date);
         assertEquals(12, c.get(Calendar.HOUR_OF_DAY));
@@ -185,6 +190,18 @@ public class FieldConvertersTest extends TestCase {
         assertEquals(2000, c.get(Calendar.YEAR));
         assertEquals(3, c.get(Calendar.MONTH));
         assertEquals(26, c.get(Calendar.DAY_OF_MONTH));
+
+        timestamp = UtcTimestampConverter.convert("20000426-12:05:06.555236");
+        c.setTime(timestamp);
+        assertEquals(12, c.get(Calendar.HOUR_OF_DAY));
+        assertEquals(5, c.get(Calendar.MINUTE));
+        assertEquals(6, c.get(Calendar.SECOND));
+        assertEquals(555, c.get(Calendar.MILLISECOND));
+        assertEquals(2000, c.get(Calendar.YEAR));
+        assertEquals(3, c.get(Calendar.MONTH));
+        assertEquals(26, c.get(Calendar.DAY_OF_MONTH));
+        assertEquals(555_236_000, timestamp.getNanos());
+
         try {
             UtcTimestampConverter.convert("2000042x-12:05:06.555");
             fail();

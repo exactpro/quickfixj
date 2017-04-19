@@ -90,7 +90,7 @@ public class UtcTimestampConverter extends AbstractDateTimeConverter {
         
         switch (value.length()) {
         case 24:
-        	nanosecond += parseLong(value.substring(22, 24)) * 1_000;
+        	nanosecond += parseLong(value.substring(21, 24)) * 1_000;
 		case 21:
 			nanosecond += parseLong(value.substring(18, 21)) * 1_000_000;
 		default:
@@ -132,7 +132,7 @@ public class UtcTimestampConverter extends AbstractDateTimeConverter {
 
         switch (value.length()) {
         case 24: //microseconds
-        	assertDigitSequence(value, 22, 24, type);
+        	assertDigitSequence(value, 21, 24, type);
         case 21: //milliseconds			
         	assertSeparator(value, 17, '.', type);
         	assertDigitSequence(value, 18, 21, type);
