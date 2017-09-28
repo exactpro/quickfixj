@@ -24,6 +24,7 @@ import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -168,15 +169,23 @@ public class FileStore implements MessageStore, Closeable {
     }
 
     private void initializeSequenceNumbers() throws IOException {
-        senderSequenceNumberFile.seek(0);
-        targetSequenceNumberFile.seek(0);
-        if (senderSequenceNumberFile.length() > 0) {
-            final String s = senderSequenceNumberFile.readUTF();
-            cache.setNextSenderMsgSeqNum(Integer.parseInt(s));
+        try {
+            senderSequenceNumberFile.seek(0);
+            if (senderSequenceNumberFile.length() > 0) {
+                final String s = senderSequenceNumberFile.readUTF();
+                cache.setNextSenderMsgSeqNum(Integer.parseInt(s));
+            }
+        } catch (IOException e) {
+            throw new IOException(String.format("IO problem with file [%s]", senderSeqNumFileName), e);
         }
-        if (targetSequenceNumberFile.length() > 0) {
-            final String s = targetSequenceNumberFile.readUTF();
-            cache.setNextTargetMsgSeqNum(Integer.parseInt(s));
+        try {
+            targetSequenceNumberFile.seek(0);
+            if (targetSequenceNumberFile.length() > 0) {
+                final String s = targetSequenceNumberFile.readUTF();
+                cache.setNextTargetMsgSeqNum(Integer.parseInt(s));
+            }
+        } catch (IOException e) {
+            throw new IOException(String.format("IO problem with file [%s]", targetSeqNumFileName), e);
         }
     }
 
@@ -202,6 +211,10 @@ public class FileStore implements MessageStore, Closeable {
                         final int size = headerDataInputStream.readInt();
                         updateMessageIndex((long) sequenceNumber, new long[] { offset, size });
                     }
+                } catch (EOFException e) {
+                    throw new IOException(String.format("End of file [%s] or end of stream has been reached", headerFileName), e);
+                } catch (IOException e) {
+                    throw new IOException(String.format("IO problem with file [%s]", headerFileName), e);
                 } finally {
                     headerDataInputStream.close();
                 }
