@@ -79,7 +79,7 @@ public class UtcTimeOnlyConverter extends AbstractDateTimeConverter {
         	Date date = null;
         	switch (value.length()) {
         	case 15:
-        		nanosecond += parseLong(value.substring(13, 15)) * 1_000;
+        		nanosecond += parseLong(value.substring(12, 15)) * 1_000;
         	case 12:
         		date = getFormatter(true).parse(value.substring(0, 12));
         		break;

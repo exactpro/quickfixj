@@ -19,6 +19,7 @@
 
 package quickfix;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
@@ -238,6 +239,7 @@ public class FieldConvertersTest extends TestCase {
         Calendar c = new GregorianCalendar(0, 0, 0, 12, 5, 6);
         c.setTimeZone(TimeZone.getTimeZone("UTC"));
         c.set(Calendar.MILLISECOND, 555);
+
         Timestamp timestamp = new Timestamp(c.getTimeInMillis());
         assertEquals("12:05:06", UtcTimeOnlyConverter.convert(timestamp,
                 false, false));
@@ -246,15 +248,23 @@ public class FieldConvertersTest extends TestCase {
         assertEquals("12:05:06.555000", UtcTimeOnlyConverter.convert(timestamp,
                 true, true));
 
-        Date date = UtcTimeOnlyConverter.convert("12:05:06.555");
+        timestamp.setNanos(724_539_000);
+        assertEquals("12:05:06.724539", UtcTimeOnlyConverter.convert(timestamp,
+                true, true));
+        assertEquals("12:05:06.724", UtcTimeOnlyConverter.convert(timestamp,
+                true, false));
+
+        Timestamp date = UtcTimeOnlyConverter.convert("12:05:06.724539");
         c.setTime(date);
         assertEquals(12, c.get(Calendar.HOUR_OF_DAY));
         assertEquals(5, c.get(Calendar.MINUTE));
         assertEquals(6, c.get(Calendar.SECOND));
-        assertEquals(555, c.get(Calendar.MILLISECOND));
+        assertEquals(724, c.get(Calendar.MILLISECOND));
         assertEquals(1970, c.get(Calendar.YEAR));
         assertEquals(0, c.get(Calendar.MONTH));
         assertEquals(1, c.get(Calendar.DAY_OF_MONTH));
+        assertEquals(724_539_000, date.getNanos());
+
         try {
             UtcTimeOnlyConverter.convert("I2:05:06.555");
             fail();
