@@ -19,6 +19,10 @@
 
 package quickfix;
 
+import static quickfix.BusinessRejectReasonText.APPLICATION_NOT_AVAILABLE;
+import static quickfix.BusinessRejectReasonText.CONDITIONALLY_REQUIRED_FIELD_MISSING;
+import static quickfix.BusinessRejectReasonText.FIELD;
+import static quickfix.BusinessRejectReasonText.UNSUPPORTED_MESSAGE_TYPE;
 import static quickfix.LogUtil.logThrowable;
 
 import java.io.Closeable;
@@ -70,7 +74,6 @@ import quickfix.field.TargetSubID;
 import quickfix.field.TestReqID;
 import quickfix.field.Text;
 import quickfix.mina.EventHandlingStrategy;
-import static quickfix.BusinessRejectReasonText.*;
 
 /**
  * The Session is the primary FIX abstraction for message communication. It
@@ -316,6 +319,11 @@ public class Session implements Closeable {
     public static final String SETTING_ALLOW_UNKNOWN_MSG_FIELDS = "AllowUnknownMsgFields";
 
     public static final String SETTING_DEFAULT_APPL_VER_ID = "DefaultApplVerID";
+    
+    /**
+     * Use sender DefaultApplVerId as initial target DefaultApplVerId value for FIXT versions
+     */
+    public static final String SETTING_USE_SENDER_DEFAULT_APPL_VER_ID_AS_INITIAL_TARGET = "SenderDefaultApplVerIdAsInitialTarget";
 
     /**
      * Allow to disable heart beat failure detection
@@ -437,8 +445,8 @@ public class Session implements Closeable {
         this(application, messageStoreFactory, sessionID, dataDictionaryProvider, sessionSchedule,
                 logFactory, messageFactory, heartbeatInterval, true, DEFAULT_MAX_LATENCY, true, false,
                 false, false, false, false, true, false, true, false,
-                DEFAULT_TEST_REQUEST_DELAY_MULTIPLIER, null, true, new int[] { 5 }, false, false,
-                false, true, false, true, false, null, true, DEFAULT_RESEND_RANGE_CHUNK_SIZE, false, false, false, false);
+                DEFAULT_TEST_REQUEST_DELAY_MULTIPLIER, null, null, true, new int[] { 5 }, false,
+                false, false, true, false, true, false, null, true, DEFAULT_RESEND_RANGE_CHUNK_SIZE, false, false, false, false);
     }
 
     public Session(Application application, MessageStoreFactory messageStoreFactory, SessionID sessionID,
@@ -450,13 +458,13 @@ public class Session implements Closeable {
             boolean checkCompID, boolean redundantResentRequestsAllowed,
             boolean persistMessages, boolean useClosedRangeForResend,
             double testRequestDelayMultiplier, DefaultApplVerID senderDefaultApplVerID,
-            boolean validateSequenceNumbers, int[] logonIntervals, boolean resetOnError,
-            boolean disconnectOnError, boolean disableHeartBeatCheck,
-            boolean rejectInvalidMessage, boolean rejectMessageOnUnhandledException,
-            boolean requiresOrigSendingTime, boolean forceResendWhenCorruptedStore,
-            Set<InetAddress> allowedRemoteAddresses, boolean validateIncomingMessage,
-            int resendRequestChunkSize, boolean enableNextExpectedMsgSeqNum,
-            boolean enableLastMsgSeqNumProcessed, boolean duplicateTagsAllowed, boolean ignoreAbsenceOf141tag) {
+            ApplVerID targetDefaultApplVerID, boolean validateSequenceNumbers, int[] logonIntervals,
+            boolean resetOnError, boolean disconnectOnError,
+            boolean disableHeartBeatCheck, boolean rejectInvalidMessage,
+            boolean rejectMessageOnUnhandledException, boolean requiresOrigSendingTime,
+            boolean forceResendWhenCorruptedStore, Set<InetAddress> allowedRemoteAddresses,
+            boolean validateIncomingMessage, int resendRequestChunkSize,
+            boolean enableNextExpectedMsgSeqNum, boolean enableLastMsgSeqNumProcessed, boolean duplicateTagsAllowed, boolean ignoreAbsenceOf141tag) {
         this.application = application;
         this.sessionID = sessionID;
         this.sessionSchedule = sessionSchedule;
@@ -516,7 +524,9 @@ public class Session implements Closeable {
 
         // QFJ-721: for non-FIXT sessions we do not need to set targetDefaultApplVerID from Logon
         if (!sessionID.isFIXT()) {
-            targetDefaultApplVerID.set(MessageUtils.toApplVerID(sessionID.getBeginString()));
+            this.targetDefaultApplVerID.set(MessageUtils.toApplVerID(sessionID.getBeginString()));
+        } else {
+            this.targetDefaultApplVerID.set(targetDefaultApplVerID);
         }
 
         setEnabled(true);

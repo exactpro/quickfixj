@@ -94,15 +94,21 @@ public class DefaultSessionFactory implements SessionFactory {
             }
 
             DefaultApplVerID senderDefaultApplVerID = null;
+            ApplVerID targetDefaultApplVerID = null;
 
             if (sessionID.isFIXT()) {
                 if (!settings.isSetting(sessionID, Session.SETTING_DEFAULT_APPL_VER_ID)) {
                     throw new SessionConfigError(Session.SETTING_DEFAULT_APPL_VER_ID, Session.SETTING_DEFAULT_APPL_VER_ID
                             + " is required for FIXT transport");
                 }
-                senderDefaultApplVerID = new DefaultApplVerID(toApplVerID(
-                        settings.getString(sessionID, Session.SETTING_DEFAULT_APPL_VER_ID))
-                        .getValue());
+                ApplVerID defaultApplVerID = toApplVerID(
+                        settings.getString(sessionID, Session.SETTING_DEFAULT_APPL_VER_ID));
+                
+                senderDefaultApplVerID = new DefaultApplVerID(defaultApplVerID.getValue());
+                if (settings.isSetting(sessionID, Session.SETTING_USE_SENDER_DEFAULT_APPL_VER_ID_AS_INITIAL_TARGET) &&
+                        settings.getBool(sessionID, Session.SETTING_USE_SENDER_DEFAULT_APPL_VER_ID_AS_INITIAL_TARGET)) {
+                    targetDefaultApplVerID = defaultApplVerID;
+                }
             }
 
             boolean useDataDictionary = true;
@@ -196,12 +202,12 @@ public class DefaultSessionFactory implements SessionFactory {
                     messageFactory, heartbeatInterval, checkLatency, maxLatency, millisInTimestamp, microsInTimestamp,
                     resetOnLogon, resetOnLogout, resetOnDisconnect, refreshAtLogon, checkCompID,
                     redundantResentRequestAllowed, persistMessages, useClosedIntervalForResend,
-                    testRequestDelayMultiplier, senderDefaultApplVerID, validateSequenceNumbers,
-                    logonIntervals, resetOnError, disconnectOnError, disableHeartBeatCheck,
-                    rejectInvalidMessage, rejectMessageOnUnhandledException, requiresOrigSendingTime,
-                    forceResendWhenCorruptedStore, allowedRemoteAddresses, validateIncomingMessage,
-                    resendRequestChunkSize, enableNextExpectedMsgSeqNum, enableLastMsgSeqNumProcessed,
-                    duplicateTagsAllowed, ignoreAbsenceOf141tag);
+                    testRequestDelayMultiplier, senderDefaultApplVerID, targetDefaultApplVerID,
+                    validateSequenceNumbers, logonIntervals, resetOnError, disconnectOnError,
+                    disableHeartBeatCheck, rejectInvalidMessage, rejectMessageOnUnhandledException,
+                    requiresOrigSendingTime, forceResendWhenCorruptedStore, allowedRemoteAddresses,
+                    validateIncomingMessage, resendRequestChunkSize, enableNextExpectedMsgSeqNum,
+                    enableLastMsgSeqNumProcessed, duplicateTagsAllowed, ignoreAbsenceOf141tag);
 
             session.setLogonTimeout(logonTimeout);
             session.setLogoutTimeout(logoutTimeout);

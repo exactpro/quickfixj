@@ -92,8 +92,8 @@ public class SessionTest {
                 mockMessageStoreFactory, sessionID, null, null, mockLogFactory,
                 new DefaultMessageFactory(), 30, false, 30, true, false, true,
                 false, false, false, false, false, true, false, 1.5, null,
-                true, new int[] { 5 }, false, false, false, true, false, true,
-                false, null, true, 0, false, false, true, true);
+                null, true, new int[] { 5 }, false, false, false, true, false,
+                true, false, null, true, 0, false, false, true, true);
 
         // Simulate socket disconnect
         session.setResponder(null);
@@ -135,8 +135,8 @@ public class SessionTest {
                 mockMessageStoreFactory, sessionID, null, null, mockLogFactory,
                 new DefaultMessageFactory(), 30, false, 30, true, false, true,
                 false, false, false, false, false, true, false, 1.5, null,
-                true, new int[] { 5 }, false, false, false, true, false, true,
-                false, null, true, 0, false, false, true, true);
+                null, true, new int[] { 5 }, false, false, false, true, false,
+                true, false, null, true, 0, false, false, true, true);
 
         // Simulate socket disconnect
         session.setResponder(null);
@@ -1365,6 +1365,58 @@ public class SessionTest {
         session.close();
     }
 
+    /**
+     * RM-45969: Application version id can be tested before FIX session 
+     * established (Logon messages swap)
+     */
+    @Test
+    public void testInitialTargetApplVerIDNonLogonMessageFIXT() throws Exception {
+
+        final SessionID sessionID = new SessionID(
+                FixVersions.BEGINSTRING_FIXT11, "SENDER", "TARGET");
+        final ApplVerID applVerID = MessageUtils
+                .toApplVerID(FixVersions.FIX50SP2);
+        final ApplVerID targetApplVerID = MessageUtils
+                .toApplVerID(FixVersions.FIX50SP2);
+        final UnitTestApplication application = new UnitTestApplication();
+        final Session session = SessionFactoryTestSupport.createSession(
+                sessionID, application, true, false, true, true,
+                new DefaultApplVerID(ApplVerID.FIX50SP2), targetApplVerID);
+        session.setResponder(new UnitTestResponder());
+
+        // construct example messages
+        final quickfix.fixt11.Heartbeat heartbeat = new quickfix.fixt11.Heartbeat();
+        setUpHeader(session.getSessionID(), heartbeat, true, 1);
+        heartbeat.toString(); // calculate checksum, length
+        final quickfix.fixt11.Logon logon = new quickfix.fixt11.Logon();
+        setUpHeader(session.getSessionID(), logon, true, 1);
+        logon.setInt(HeartBtInt.FIELD, 30);
+        logon.setInt(EncryptMethod.FIELD, EncryptMethod.NONE_OTHER);
+        logon.setString(DefaultApplVerID.FIELD, ApplVerID.FIX50SP2);
+        logon.toString(); // calculate checksum, length
+
+        assertTrue(session.isUsingDataDictionary());
+        assertTrue(targetApplVerID == session.getTargetDefaultApplicationVersionID());
+        session.next();
+        session.next();
+        session.next(heartbeat);
+        assertTrue(targetApplVerID == session.getTargetDefaultApplicationVersionID());
+        assertFalse(session.isLoggedOn());
+
+        // retry Logon
+        session.setResponder(new UnitTestResponder());
+        session.next();
+        session.next();
+        assertTrue(targetApplVerID == session.getTargetDefaultApplicationVersionID());
+        session.next(logon);
+        assertFalse(targetApplVerID == session.getTargetDefaultApplicationVersionID());
+        assertEquals(applVerID, session.getTargetDefaultApplicationVersionID());
+        
+        assertTrue(session.isLoggedOn());
+
+        session.close();
+    }
+    
     private void processMessage(Session session, Message message)
             throws FieldNotFound, RejectLogon, IncorrectDataFormat,
             IncorrectTagValue, UnsupportedMessageType, IOException,
@@ -1811,9 +1863,9 @@ public class SessionTest {
                 new ScreenLogFactory(true, true, true),
                 new DefaultMessageFactory(), isInitiator ? 30 : 0, false, 30,
                 true, false, resetOnLogon, false, false, false, false, false,
-                true, false, 1.5, null, validateSequenceNumbers,
-                new int[] { 5 }, false, false, false, true, false, true, false, null,
-                true, chunkSize, false, false, true, true);
+                true, false, 1.5, null, null,
+                validateSequenceNumbers, new int[] { 5 }, false, false, false, true, false, true, false,
+                null, true, chunkSize, false, false, true, true);
 
         UnitTestResponder responder = new UnitTestResponder();
         session.setResponder(responder);
@@ -1877,9 +1929,9 @@ public class SessionTest {
                 new ScreenLogFactory(true, true, true),
                 new DefaultMessageFactory(), isInitiator ? 30 : 0, false, 30,
                 true, false, resetOnLogon, false, false, false, false, false,
-                true, false, 1.5, null, validateSequenceNumbers,
-                new int[] { 5 }, false, disconnectOnError, false, true, false, true,
-                false, null, true, 0, false, false, true, true);
+                true, false, 1.5, null, null,
+                validateSequenceNumbers, new int[] { 5 }, false, disconnectOnError, false, true, false,
+                true, false, null, true, 0, false, false, true, true);
 
         UnitTestResponder responder = new UnitTestResponder();
         session.setResponder(responder);
@@ -1935,8 +1987,8 @@ public class SessionTest {
                 sessionID, null, null, null,
                 new DefaultMessageFactory(), isInitiator ? 30 : 0, false, 30, true, false,
                 resetOnLogon, false, false, false, false, false, true, false, 1.5, null,
-                validateSequenceNumbers, new int[]{5}, false, false, false, true, false, true, false, null, true,
-                0, false, false, true, true);
+                null, validateSequenceNumbers, new int[]{5}, false, false, false, true, false, true, false, null,
+                true, 0, false, false, true, true);
 
         UnitTestResponder responder = new UnitTestResponder();
         session.setResponder(responder);
