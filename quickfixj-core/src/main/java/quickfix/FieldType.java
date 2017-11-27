@@ -85,6 +85,7 @@ public class FieldType {
     public final static FieldType MultipleValueString = new FieldType("MULTIPLEVALUESTRING");
     public final static FieldType Exchange = new FieldType("EXCHANGE");
     public final static FieldType UtcTimeStamp = new FieldType("UTCTIMESTAMP", Date.class);
+    public final static FieldType UtcTimeStampSecondPresicion = new FieldType("UTCTIMESTAMPSECONDPRECISION", Date.class);
     public final static FieldType Boolean = new FieldType("BOOLEAN", Boolean.class);
     public final static FieldType LocalMktDate = new FieldType("LOCALMKTDATE");
     public final static FieldType Data = new FieldType("DATA");

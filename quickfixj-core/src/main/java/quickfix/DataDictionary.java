@@ -789,7 +789,7 @@ public class DataDictionary {
                 UtcDateOnlyConverter.convert(field.getValue());
             } else if (fieldType == FieldType.UtcTimeOnly) {
                 UtcTimeOnlyConverter.convert(field.getValue());
-            } else if (fieldType == FieldType.UtcTimeStamp || fieldType == FieldType.Time) {
+            } else if (fieldType == FieldType.UtcTimeStamp || fieldType == FieldType.UtcTimeStampSecondPresicion || fieldType == FieldType.Time) {
                 UtcTimestampConverter.convert(field.getValue());
             } else if (fieldType == FieldType.NumInGroup) {
                 IntConverter.convert(field.getValue());
