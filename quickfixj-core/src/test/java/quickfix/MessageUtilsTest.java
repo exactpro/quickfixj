@@ -38,7 +38,6 @@ import quickfix.fix40.Logon;
 import quickfix.fix50.Email;
 
 public class MessageUtilsTest extends TestCase {
-
     public void testGetStringField() throws Exception {
         String messageString = "8=FIX.4.2\0019=12\00135=X\001108=30\00110=049\001";
         assertEquals("wrong value", "FIX.4.2", MessageUtils.getStringField(messageString,
@@ -157,6 +156,121 @@ public class MessageUtilsTest extends TestCase {
 
         Message message = MessageUtils.parse(new quickfix.fix40.MessageFactory(), DataDictionaryTest.getDictionary(), data);
         assertThat(message, is(notNullValue()));
+    }
+
+    public void testDuplicateTagsHeaderFirstTag() throws Exception {
+        try {
+            String data = "8=FIX.4.4\0018=FIX.4.4\0019=309\0019=309\00135=8\00149=SENDER\00156=CL1_FIX44\00134=4\001"
+                    + "52=20060324-01:05:58\00117=X-B-WOW-1494E9A0:58BD3F9D-1109\001150=D\001"
+                    + "39=0\00111=184271\00138=200\001198=1494E9A0:58BD3F9D\001526=4324\001"
+                    + "37=B-WOW-1494E9A0:58BD3F9D\00155=WOW\00154=1\001151=200\00114=0\00140=2\001"
+                    + "44=15\00159=1\0016=0\001453=3\001448=AAA35791\001447=D\001452=3\001448=8\001"
+                    + "447=D\001452=4\001448=FIX11\001447=D\001452=36\00160=20060320-03:34:29\00110=169\001";
+            Message message = MessageUtils.parse(new quickfix.fix44.MessageFactory(), DataDictionaryTest.getDictionary(), data);
+            fail("Message with duplicate header tags was parsed");
+        } catch (InvalidMessage e) {
+            //expected
+        }
+    }
+
+    public void testDuplicateTagsHeader() throws Exception {
+        String data = "8=FIX.4.4\0019=309\00135=8\00149=SENDER\00149=SENDER\00156=CL1_FIX44\00134=4\001"
+                + "52=20060324-01:05:58\00117=X-B-WOW-1494E9A0:58BD3F9D-1109\001150=D\001"
+                + "39=0\00111=184271\00138=200\001198=1494E9A0:58BD3F9D\001526=4324\001"
+                + "37=B-WOW-1494E9A0:58BD3F9D\00155=WOW\00154=1\001151=200\00114=0\00140=2\001"
+                + "44=15\00159=1\0016=0\001453=3\001448=AAA35791\001447=D\001452=3\001448=8\001"
+                + "447=D\001452=4\001448=FIX11\001447=D\001452=36\00160=20060320-03:34:29\00110=169\001";
+        Message message = new Message();
+        message.parse(data, DataDictionaryTest.getDictionary(),DataDictionaryTest.getDictionary(), true, false);
+        assertEquals(message.getException().getMessage(), "Tag appears more than once, field=49");
+    }
+
+    public void testDuplicateTagsHeaderWithTrueDuplicateTags() throws Exception {
+        String data = "8=FIX.4.4\0019=309\00135=8\00149=SENDER\00149=SENDER2\00156=CL1_FIX44\00134=4\001"
+                + "52=20060324-01:05:58\00117=X-B-WOW-1494E9A0:58BD3F9D-1109\001150=D\001"
+                + "39=0\00111=184271\00138=200\001198=1494E9A0:58BD3F9D\001526=4324\001"
+                + "37=B-WOW-1494E9A0:58BD3F9D\00155=WOW\00154=1\001151=200\00114=0\00140=2\001"
+                + "44=15\00159=1\0016=0\001453=3\001448=AAA35791\001447=D\001452=3\001448=8\001"
+                + "447=D\001452=4\001448=FIX11\001447=D\001452=36\00160=20060320-03:34:29\00110=28\001";
+        Message message = new Message();
+        message.parse(data, DataDictionaryTest.getDictionary(),DataDictionaryTest.getDictionary(), true, true);
+        assertEquals(message.getHeader().getField(49).getValue(), "SENDER2");
+    }
+
+    public void testDuplicateTagsBody() throws Exception {
+        String data = "8=FIX.4.4\0019=309\00135=8\00149=SENDER\00156=CL1_FIX44\00134=4\001"
+                + "52=20060324-01:05:58\00117=X-B-WOW-1494E9A0:58BD3F9D-1109\001150=D\001"
+                + "39=0\00111=184271\00138=200\00138=200\00138=200\001198=1494E9A0:58BD3F9D\001526=4324\001" + "37=B-WOW-1494E9A0:58BD3F9D\001"
+                + "55=WOW\00155=WOW\00154=1\001151=200\001151=200\001151=200\00155=WOW\00155=WOW\001"
+                + "151=200\001151=200\001151=200\001151=200\001151=200\00114=0\00140=2\001"
+                + "44=15\00159=1\0016=0\001453=3\001448=AAA35791\001447=D\001452=3\001448=8\001"
+                + "447=D\001452=4\001448=FIX11\001447=D\001452=36\00160=20060320-03:34:29\00110=169\001";
+        Message message = new Message();
+        message.parse(data, DataDictionaryTest.getDictionary(),DataDictionaryTest.getDictionary(), true, false);
+        assertEquals(message.getException().getMessage(), "Tag appears more than once, field=38");
+    }
+
+    public void testDuplicateTagsBodyWithTrueDuplicateTags() throws Exception {
+        String data = "8=FIX.4.4\0019=309\00135=8\00149=SENDER\00156=CL1_FIX44\00134=4\001"
+                + "52=20060324-01:05:58\00117=X-B-WOW-1494E9A0:58BD3F9D-1109\001150=D\001"
+                + "39=0\00111=184271\00138=200\00138=200\00138=200\001198=1494E9A0:58BD3F9D\001526=4324\001" + "37=B-WOW-1494E9A0:58BD3F9D\001"
+                + "55=WOW\00155=WOW\00154=1\001151=200\001151=200\001151=200\00155=WOW\00155=WOW\001"
+                + "151=200\001151=200\001151=200\001151=200\001151=208\00114=0\00140=2\001"
+                + "44=15\00159=1\0016=0\001453=3\001448=AAA35791\001447=D\001452=3\001448=8\001"
+                + "447=D\001452=4\001448=FIX11\001447=D\001452=36\00160=20060320-03:34:29\00110=188\001";
+        Message message = new Message();
+        message.parse(data, DataDictionaryTest.getDictionary(),DataDictionaryTest.getDictionary(), true, true);
+        assertEquals(message.getField(55).getValue(), "WOW");
+        assertEquals(message.getField(151).getValue(), "208");
+    }
+
+    public void testDuplicateTagsGroup() throws Exception {
+        String data = "8=FIX.4.4\0019=309\00135=8\00149=SENDER\00156=CL1_FIX44\00134=4\001"
+                + "52=20060324-01:05:58\00117=X-B-WOW-1494E9A0:58BD3F9D-1109\001150=D\001"
+                + "39=0\00111=184271\00138=200\001198=1494E9A0:58BD3F9D\001526=4324\001"
+                + "37=B-WOW-1494E9A0:58BD3F9D\00155=WOW\00154=1\001151=200\00114=0\00140=2\001"
+                + "44=15\00159=1\0016=0\001453=3\001448=AAA35791\001447=D\001447=A\001452=3\001448=8\001"
+                + "447=D\001452=4\001448=FIX11\001447=D\001452=36\00160=20060320-03:34:29\00110=199\001";
+        Message message = new Message();
+        message.parse(data, DataDictionaryTest.getDictionary(),DataDictionaryTest.getDictionary(), true, false);
+        assertEquals(message.getException().getMessage(), "Tag appears more than once, field=447");
+    }
+
+    public void testDuplicateTagsGroupWithTrueDuplicateTags() throws Exception {
+        String data = "8=FIX.4.4\0019=309\00135=8\00149=SENDER\00156=CL1_FIX44\00134=4\001"
+                + "52=20060324-01:05:58\00117=X-B-WOW-1494E9A0:58BD3F9D-1109\001150=D\001"
+                + "39=0\00111=184271\00138=200\001198=1494E9A0:58BD3F9D\001526=4324\001"
+                + "37=B-WOW-1494E9A0:58BD3F9D\00155=WOW\00154=1\001151=200\00114=0\00140=2\001"
+                + "44=15\00159=1\0016=0\001453=3\001448=AAA35791\001447=D\001447=A\001452=3\001448=8\001"
+                + "447=D\001452=4\001448=FIX11\001447=D\001452=36\00160=20060320-03:34:29\00110=156\001";
+        Message message = new Message();
+        message.parse(data, DataDictionaryTest.getDictionary(),DataDictionaryTest.getDictionary(), true, true);
+        assertEquals(message.getGroups(453).get(0).getField(447).getValue(), "A");
+    }
+
+    public void testDuplicateTagsTrailer() throws Exception {
+        String data = "8=FIX.4.4\0019=309\00135=8\00149=SENDER\00156=CL1_FIX44\00134=4\001"
+                + "52=20060324-01:05:58\00117=X-B-WOW-1494E9A0:58BD3F9D-1109\001150=D\001"
+                + "39=0\00111=184271\00138=200\001198=1494E9A0:58BD3F9D\001526=4324\001"
+                + "37=B-WOW-1494E9A0:58BD3F9D\00155=WOW\00154=1\001151=200\00114=0\00140=2\001"
+                + "44=15\00159=1\0016=0\001453=3\001448=AAA35791\001447=D\001452=3\001448=8\001"
+                + "447=D\001452=4\001448=FIX11\001447=D\001452=36\00160=20060320-03:34:29\00110=169\00193=4\00189=aaaa\00189=aaaa\00110=169\001";
+        Message message = new Message();
+        message.parse(data, DataDictionaryTest.getDictionary(),DataDictionaryTest.getDictionary(), true, false);
+        assertEquals(message.getException().getMessage(), "Tag appears more than once, field=89");
+    }
+
+    public void testDuplicateTagsTrailerWithTrueDuplicateTags() throws Exception {
+        String data = "8=FIX.4.4\0019=309\00135=8\00149=SENDER\00156=CL1_FIX44\00134=4\001"
+                + "52=20060324-01:05:58\00117=X-B-WOW-1494E9A0:58BD3F9D-1109\001150=D\001"
+                + "39=0\00111=184271\00138=200\001198=1494E9A0:58BD3F9D\001526=4324\001"
+                + "37=B-WOW-1494E9A0:58BD3F9D\00155=WOW\00154=1\001151=200\00114=0\00140=2\001"
+                + "44=15\00159=1\0016=0\001453=3\001448=AAA35791\001447=D\001452=3\001448=8\001"
+                + "447=D\001452=4\001448=FIX11\001447=D\001452=36\00160=20060320-03:34:29\00110=169\00193=4\00189=aaaa\00189=aaab\00110=2\001";
+        Message message = new Message();
+        message.parse(data, DataDictionaryTest.getDictionary(),DataDictionaryTest.getDictionary(), true, true);
+        assertEquals(message.getTrailer().getField(89).getValue(), "aaab");
+
     }
 
     public void testParseFixt() throws Exception {

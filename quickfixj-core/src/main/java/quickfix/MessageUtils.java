@@ -143,13 +143,12 @@ public class MessageUtils {
                 .getApplicationDataDictionary(applVerID);
 
         final quickfix.Message message = messageFactory.create(beginString, msgType);
-        message.setDuplicateTagsAllowed(session.isDuplicateTagsAllowed());
         final DataDictionary payloadDictionary = MessageUtils.isAdminMessage(msgType)
                 ? sessionDataDictionary
                 : applicationDataDictionary;
 
         message.parse(messageString, sessionDataDictionary, payloadDictionary,
-                payloadDictionary != null);
+                payloadDictionary != null, session.isDuplicateTagsAllowed());
 
         return message;
     }
