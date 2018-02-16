@@ -38,21 +38,21 @@
 
 <xsl:template match="fix">/* Generated Java Source File */
 /*******************************************************************************
- * Copyright (c) quickfixengine.org  All rights reserved. 
- * 
- * This file is part of the QuickFIX FIX Engine 
- * 
- * This file may be distributed under the terms of the quickfixengine.org 
- * license as defined by quickfixengine.org and appearing in the file 
- * LICENSE included in the packaging of this file. 
- * 
- * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING 
- * THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A 
- * PARTICULAR PURPOSE. 
- * 
- * See http://www.quickfixengine.org/LICENSE for licensing information. 
- * 
- * Contact ask@quickfixengine.org if any conditions of this licensing 
+ * Copyright (c) quickfixengine.org  All rights reserved.
+ *
+ * This file is part of the QuickFIX FIX Engine
+ *
+ * This file may be distributed under the terms of the quickfixengine.org
+ * license as defined by quickfixengine.org and appearing in the file
+ * LICENSE included in the packaging of this file.
+ *
+ * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING
+ * THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE.
+ *
+ * See http://www.quickfixengine.org/LICENSE for licensing information.
+ *
+ * Contact ask@quickfixengine.org if any conditions of this licensing
  * are not clear to you.
  ******************************************************************************/
 <xsl:apply-templates/>
@@ -78,7 +78,6 @@
   <xsl:variable name="package" select="concat($messagePackage,$subpackage)"/>
 package <xsl:value-of select="$package"/>;
 
-import quickfix.FieldNotFound;
 <xsl:call-template name="extra-imports"/>
 
 public class <xsl:value-of select="@name"/> extends <xsl:value-of select="$baseClass"/> {
@@ -251,12 +250,12 @@ import quickfix.Group;</xsl:if>
 		setField(value);
 	}
 
-	public <xsl:value-of select="$fieldPackage"/>.<xsl:value-of select="@name"/> get(<xsl:value-of select="$fieldPackage"/>.<xsl:value-of select="@name"/> value) throws FieldNotFound {
+	public <xsl:value-of select="$fieldPackage"/>.<xsl:value-of select="@name"/> get(<xsl:value-of select="$fieldPackage"/>.<xsl:value-of select="@name"/> value) throws quickfix.FieldNotFound {
 		getField(value);
 		return value;
 	}
 
-	public <xsl:value-of select="$fieldPackage"/>.<xsl:value-of select="@name"/> get<xsl:value-of select="@name"/>() throws FieldNotFound {
+	public <xsl:value-of select="$fieldPackage"/>.<xsl:value-of select="@name"/> get<xsl:value-of select="@name"/>() throws quickfix.FieldNotFound {
 		return get(new <xsl:value-of select="$fieldPackage"/>.<xsl:value-of select="@name"/>());
 	}
 
@@ -275,12 +274,12 @@ import quickfix.Group;</xsl:if>
 		setComponent(component);
 	}
 
-	public <xsl:value-of select="$type"/> get(<xsl:value-of select="$type"/> component) throws FieldNotFound {
+	public <xsl:value-of select="$type"/> get(<xsl:value-of select="$type"/> component) throws quickfix.FieldNotFound {
 		getComponent(component);
 		return component;
 	}
 
-	public <xsl:value-of select="$type"/> get<xsl:value-of select="@name"/>() throws FieldNotFound {
+	public <xsl:value-of select="$type"/> get<xsl:value-of select="@name"/>() throws quickfix.FieldNotFound {
 		return get(new <xsl:value-of select="$type"/>());
 	}
 </xsl:template>
