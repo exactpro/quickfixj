@@ -130,4 +130,10 @@ public interface Application {
      * @param sessionId QuickFIX session ID
      */
     void onMessageRejected(Message message, SessionID sessionId);
+
+    /**
+     * This callback is invoked when JFQ disconnects session by internal reason
+     * @param reason problem description
+     */
+    void onConnectionProblem(String reason);
 }

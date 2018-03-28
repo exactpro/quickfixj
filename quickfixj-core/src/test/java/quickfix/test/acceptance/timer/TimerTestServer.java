@@ -161,4 +161,11 @@ public class TimerTestServer extends MessageCracker implements Application, Runn
 
     @Override
     public void onMessageRejected(Message message, SessionID sessionId) {}
+
+    /*
+     * (non-Javadoc)
+     * @see quickfix.Application#onConnectionProblem(String)
+     */
+    @Override
+    public void onConnectionProblem(String reason) {}
 }

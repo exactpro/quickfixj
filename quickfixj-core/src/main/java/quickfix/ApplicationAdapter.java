@@ -77,4 +77,11 @@ public class ApplicationAdapter implements Application {
         // EMPTY
     }
 
+    /*
+     * (non-Javadoc)
+     * @see quickfix.Application#onConnectionProblem(String)
+     */
+    public void onConnectionProblem(String reason) {
+        // EMPTY
+    }
 }

@@ -135,4 +135,10 @@ public class UnitTestApplication implements ApplicationExtended, SessionStateLis
 
     public void onMessageRejected(Message message, SessionID sessionId) {}
 
+    /*
+     * (non-Javadoc)
+     * @see quickfix.Application#onConnectionProblem(String)
+     */
+    @Override
+    public void onConnectionProblem(String reason) {}
 }

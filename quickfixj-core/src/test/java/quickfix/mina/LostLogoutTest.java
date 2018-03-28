@@ -167,6 +167,13 @@ public class LostLogoutTest {
         }
 
         public void onMessageRejected(Message message, SessionID sessionId) {}
+
+        /*
+         * (non-Javadoc)
+         * @see quickfix.Application#setWarning(boolean)
+         */
+        @Override
+        public void onConnectionProblem(String reason) {}
     }
 
     /*
@@ -253,5 +260,12 @@ public class LostLogoutTest {
 
         public void onMessageRejected(Message message, SessionID sessionId) {}
 
+        /*
+         * (non-Javadoc)
+         * @see quickfix.Application#onConnectionProblem(String)
+         */
+        @Override
+        public void onConnectionProblem(String reason) {
+        }
     }
 }

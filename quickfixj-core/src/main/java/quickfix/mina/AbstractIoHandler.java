@@ -76,7 +76,7 @@ public abstract class AbstractIoHandler extends IoHandlerAdapter {
         }
         if (disconnectNeeded) {
             if (quickFixSession != null) {
-                quickFixSession.disconnect(reason, true);
+                quickFixSession.disconnect(reason, true, true);
             } else {
                 log.error(reason, cause);
                 ioSession.close(true);

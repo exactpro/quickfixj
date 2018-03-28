@@ -173,4 +173,11 @@ public class ResynchTestServer extends MessageCracker implements Application, Ru
 
     @Override
     public void onMessageRejected(Message message, SessionID sessionId) {}
+
+    /*
+     * (non-Javadoc)
+     * @see quickfix.Application#onConnectionProblem(String)
+     */
+    @Override
+    public void onConnectionProblem(String reason) {}
 }

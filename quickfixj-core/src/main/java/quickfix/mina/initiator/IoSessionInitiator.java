@@ -202,6 +202,7 @@ public class IoSessionInitiator {
                 LogUtil.logThrowable(fixSession.getLog(), "Exception during connection" + nextRetryMsg, e);
             }
             connectFuture = null;
+            fixSession.onConnectionProblem("Exception during connection" + nextRetryMsg);
         }
 
         private SocketAddress getNextSocketAddress() {

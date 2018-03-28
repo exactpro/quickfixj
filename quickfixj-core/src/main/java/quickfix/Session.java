@@ -852,7 +852,7 @@ public class Session implements Closeable {
                     ((ApplicationExtended) application).onBeforeSessionReset(sessionID);
                 }
                 generateLogout();
-                disconnect("Session reset", false);
+                disconnect("Session reset", false, true);
             }
             resetState();
         } finally {
@@ -929,7 +929,7 @@ public class Session implements Closeable {
             IncorrectTagValue, UnsupportedMessageType, IOException, InvalidMessage {
 
         if (message == EventHandlingStrategy.END_OF_STREAM) {
-            disconnect(ENCOUNTERED_END_OF_STREAM, false);
+            disconnect(ENCOUNTERED_END_OF_STREAM, false, true);
             return;
         }
 
@@ -939,7 +939,7 @@ public class Session implements Closeable {
         // QFJ-650
         if (!header.isSetField(MsgSeqNum.FIELD)) {
             generateLogout("Received message without MsgSeqNum");
-            disconnect("Received message without MsgSeqNum: " + message, true);
+            disconnect("Received message without MsgSeqNum: " + message, true, true);
             return;
         }
 
@@ -1052,7 +1052,7 @@ public class Session implements Closeable {
             } else {
                 if (msgType.equals(MsgType.LOGON)) {
                     getLog().onErrorEvent("Required field missing from logon");
-                    disconnect("Required field missing from logon", true);
+                    disconnect("Required field missing from logon", true, true);
                 } else {
                     generateReject(message, SessionRejectReason.REQUIRED_TAG_MISSING, e.field);
                 }
@@ -1082,7 +1082,7 @@ public class Session implements Closeable {
                 }
             }
             state.incrNextTargetMsgSeqNum();
-            disconnect("Logon rejected: " + e, true);
+            disconnect("Logon rejected: " + e, true, true);
         } catch (final UnsupportedMessageType e) {
             getLog().onErrorEvent("Rejecting invalid message: " + e + ": " + message);
             if (resetOrDisconnectIfRequired(message)) {
@@ -1106,7 +1106,7 @@ public class Session implements Closeable {
                 // 1d_InvalidLogonWrongBeginString.def appears to require
                 // a disconnect although the C++ didn't appear to be doing it.
                 // ???
-                disconnect("Incorrect BeginString: " + e, true);
+                disconnect("Incorrect BeginString: " + e, true, true);
             }
         } catch (final IOException e) {
             LogUtil.logThrowable(sessionID, "Error processing message: " + message, e);
@@ -1127,7 +1127,7 @@ public class Session implements Closeable {
                             0);
                 } else {
                     if (msgType.equals(MsgType.LOGON)) {
-                        disconnect("Problem processing Logon message", true);
+                        disconnect("Problem processing Logon message", true, true);
                     } else {
                         generateReject(message, SessionRejectReason.OTHER, 0);
                     }
@@ -1181,7 +1181,7 @@ public class Session implements Closeable {
         }
         if (disconnectOnError) {
             try {
-                disconnect("Auto disconnect", false);
+                disconnect("Auto disconnect", false, true);
             } catch (final IOException e) {
                 log.error("Failed disconnecting: " + e);
             }
@@ -1345,7 +1345,8 @@ public class Session implements Closeable {
         }
 
         String msg;
-        if (!state.isLogoutSent()) {
+		boolean isLogoutSent = state.isLogoutSent();
+        if (!isLogoutSent) {
             msg = "Received logout request";
             if (logout.isSetField(Text.FIELD)) {
                 msg += ": " + logout.getString(Text.FIELD);
@@ -1368,7 +1369,7 @@ public class Session implements Closeable {
             resetState();
         }
 
-        disconnect(msg, false);
+        disconnect(msg, false, !isLogoutSent);
     }
 
     public void generateLogout() {
@@ -1730,7 +1731,7 @@ public class Session implements Closeable {
             throw e;
         } catch (final Exception e) {
             getLog().onErrorEvent(e.getClass().getName() + " " + e.getMessage());
-            disconnect("Verifying message failed: " + e, true);
+            disconnect("Verifying message failed: " + e, true, true);
             return false;
         }
 
@@ -1858,7 +1859,7 @@ public class Session implements Closeable {
                     }
                 }
             } else if (state.isLogonAlreadySent() && state.isLogonTimedOut()) {
-                disconnect("Timed out waiting for logon response", true);
+                disconnect("Timed out waiting for logon response", true, true);
             }
             return;
         }
@@ -1868,13 +1869,12 @@ public class Session implements Closeable {
         }
 
         if (state.isLogoutTimedOut()) {
-            disconnect("Timed out waiting for logout response", true);
+            disconnect("Timed out waiting for logout response", true, true);
         }
 
         if (state.isTimedOut()) {
             if (!disableHeartBeatCheck) {
-                disconnect("Timed out waiting for heartbeat", true);
-                stateListener.onHeartBeatTimeout();
+                disconnect("Timed out waiting for heartbeat", true, true);
             } else {
                 log.warn("Heartbeat failure detected but deactivated");
             }
@@ -1969,9 +1969,10 @@ public class Session implements Closeable {
      *
      * @param reason the reason why the session is disconnected
      * @param logError set to true if this disconnection is an error
+     * @param connectionProblem emit connection problem event
      * @throws IOException IO error
      */
-    public void disconnect(String reason, boolean logError) throws IOException {
+    public void disconnect(String reason, boolean logError, boolean connectionProblem) throws IOException {
         try {
             synchronized (responderLock) {
                 if (!hasResponder()) {
@@ -2020,8 +2021,22 @@ public class Session implements Closeable {
                 resetState();
             }
         }
+        if (connectionProblem) {
+            onConnectionProblem(reason);
+        }
     }
 
+    /**
+     * Logs out from session and closes the network connection.
+     *
+     * @param reason the reason why the session is disconnected
+     * @param logError set to true if this disconnection is an error
+     * @throws IOException IO error
+     */
+    public void disconnect(String reason, boolean logError) throws IOException {
+        disconnect(reason, logError, false);
+    }
+    
     private void nextLogon(Message logon) throws FieldNotFound, RejectLogon, IncorrectDataFormat,
             IncorrectTagValue, UnsupportedMessageType, IOException, InvalidMessage {
 
@@ -2054,7 +2069,7 @@ public class Session implements Closeable {
         }
 
         if (state.isLogonSendNeeded() && !state.isResetReceived()) {
-            disconnect("Received logon response before sending request", true);
+            disconnect("Received logon response before sending request", true, true);
             return;
         }
 
@@ -2092,7 +2107,7 @@ public class Session implements Closeable {
                         + " (NextExpectedMsgSeqNum) is higher than expected. Expected "
                         + actualNextNum + ", Received " + targetWantsNextSeqNumToBe;
                 generateLogout(err);
-                disconnect(err, true);
+                disconnect(err, true, true);
                 return;
             }
         }
@@ -2115,13 +2130,13 @@ public class Session implements Closeable {
 
         // Check for proper sequence reset response
         if (state.isResetSent() && !state.isResetReceived()) {
-            disconnect("Received logon response before sending request", true);
+            disconnect("Received logon response before sending request", true, true);
         }
 
         // Check for proper sequence reset response
         if(!ignoreAbsenceOf141tag)
             if (state.isResetSent() && !state.isResetReceived()) {
-                disconnect("Invalid sequence reset response in logon (missing 141=Y?): disconnecting", true);
+                disconnect("Invalid sequence reset response in logon (missing 141=Y?): disconnecting", true, true);
             }
 
         state.setResetSent(false);
@@ -2316,7 +2331,7 @@ public class Session implements Closeable {
         } catch (final InvalidMessage e) {
             final String message = "Invalid message: " + e;
             if (MsgType.LOGON.equals(msgType)) {
-                disconnect(message, true);
+                disconnect(message, true, true);
             } else {
                 getLog().onErrorEvent(message);
                 if (resetOrDisconnectIfRequired(null)) {
@@ -2915,5 +2930,13 @@ public class Session implements Closeable {
 
     public void setValidateFieldsOutOfRange(boolean validateFieldsOutOfRange) {
         this.validateFieldsOutOfRange = validateFieldsOutOfRange;
+    }
+
+    public void onConnectionProblem(String reason) {
+        try {
+            this.application.onConnectionProblem(reason);
+        } catch (RuntimeException e) {
+            getLog().onEvent("connection problem handling failure, reason: " + e.getMessage());
+        }
     }
 }

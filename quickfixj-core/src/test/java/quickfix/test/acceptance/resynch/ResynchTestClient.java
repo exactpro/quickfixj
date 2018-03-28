@@ -179,4 +179,11 @@ public class ResynchTestClient extends MessageCracker implements Application {
 
     @Override
     public void onMessageRejected(Message message, SessionID sessionId) {}
+
+    /*
+     * (non-Javadoc)
+     * @see quickfix.Application#onConnectionProblem(String)
+     */
+    @Override
+    public void onConnectionProblem(String reason) {}
 }
