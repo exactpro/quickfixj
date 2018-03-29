@@ -44,9 +44,9 @@ subprojects {
             }
             maven { // for gradle fast plugin
                 name 'Artifactory'
-                url 'http://arti.exactpro.com/libs-snapshot'
+                url 'http://artifactory5.exp.exactpro.com/artifactory/libs-snapshot'
             }
-            maven { url 'http://arti.exactpro.com/libs-release' }
+            maven { url 'http://artifactory5.exp.exactpro.com/artifactory/libs-release' }
         }
         dependencies {
             classpath(group: 'org.jfrog.buildinfo',             name: 'build-info-extractor-gradle',        version: '2.2.+')
@@ -65,7 +65,7 @@ subprojects {
         }
         maven {
             name 'Artifactory'
-            url 'http://arti.exactpro.com/libs-snapshot'
+            url 'http://artifactory5.exp.exactpro.com/artifactory/libs-snapshot'
         }
     }
 
