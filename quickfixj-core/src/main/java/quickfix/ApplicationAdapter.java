@@ -84,4 +84,18 @@ public class ApplicationAdapter implements Application {
     public void onConnectionProblem(String reason) {
         // EMPTY
     }
+
+    /* (non-Javadoc)
+     * @see quickfix.Application#onSendToAdmin(quickfix.Message, quickfix.SessionID)
+     */
+    public void onSendToAdmin(Message message, SessionID sessionId) {
+        // EMPTY
+    }
+
+    /* (non-Javadoc)
+     * @see quickfix.Application#onSendToApp(quickfix.Message, quickfix.SessionID)
+     */
+    public void onSendToApp(Message message, SessionID sessionId) {
+        // EMPTY
+    }
 }

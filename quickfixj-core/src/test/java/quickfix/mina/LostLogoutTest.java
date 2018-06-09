@@ -174,6 +174,12 @@ public class LostLogoutTest {
          */
         @Override
         public void onConnectionProblem(String reason) {}
+
+        @Override
+        public void onSendToAdmin(Message message, SessionID sessionId) {}
+
+        @Override
+        public void onSendToApp(Message message, SessionID sessionId) {}
     }
 
     /*
@@ -267,5 +273,11 @@ public class LostLogoutTest {
         @Override
         public void onConnectionProblem(String reason) {
         }
+
+        @Override
+        public void onSendToAdmin(Message message, SessionID sessionId) {}
+
+        @Override
+        public void onSendToApp(Message message, SessionID sessionId) {}
     }
 }

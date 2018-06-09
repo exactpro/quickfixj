@@ -168,4 +168,10 @@ public class TimerTestServer extends MessageCracker implements Application, Runn
      */
     @Override
     public void onConnectionProblem(String reason) {}
+
+    @Override
+    public void onSendToAdmin(Message message, SessionID sessionId) {}
+
+    @Override
+    public void onSendToApp(Message message, SessionID sessionId) {}
 }

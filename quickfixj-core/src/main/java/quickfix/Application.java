@@ -136,4 +136,20 @@ public interface Application {
      * @param reason problem description
      */
     void onConnectionProblem(String reason);
+
+    /**
+     * This callback is invoked when an administrative message was successfully sent
+     *
+     * @param message QuickFIX message
+     * @param sessionId QuickFIX session ID
+     */
+    void onSendToAdmin(Message message, SessionID sessionId);
+
+    /**
+     * This callback is invoked when an application message was successfully sent
+     *
+     * @param message QuickFIX message
+     * @param sessionId QuickFIX session ID
+     */
+    void onSendToApp(Message message, SessionID sessionId);
 }

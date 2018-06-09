@@ -2259,7 +2259,9 @@ public class Session implements Closeable {
                         generateSequenceReset(receivedMessage, begin, msgSeqNum);
                     }
                     getLog().onEvent("Resending Message: " + msgSeqNum);
-                    send(msg.toString());
+                    if (send(msg.toString())) {
+                        application.onSendToApp(msg, sessionID);
+                    }
                     begin = 0;
                 } else {
                     if (begin == 0) {
@@ -2532,6 +2534,14 @@ public class Session implements Closeable {
                 messageString = message.toString();
                 if (isLoggedOn()) {
                     result = send(messageString);
+                }
+            }
+
+            if (result) {
+                if (message.isAdmin()) {
+                    application.onSendToAdmin(message, sessionID);
+                } else {
+                    application.onSendToApp(message, sessionID);
                 }
             }
 
