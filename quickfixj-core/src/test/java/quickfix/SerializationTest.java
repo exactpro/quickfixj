@@ -305,7 +305,8 @@ public class SerializationTest extends TestCase {
         "quickfixj-core/target/classes",
         "target/classes",
         "classes",
-        "build/classes/main"
+        "build/classes/main",
+        "build/classes/java/main"
     };
 
     private String getBaseDirectory() {

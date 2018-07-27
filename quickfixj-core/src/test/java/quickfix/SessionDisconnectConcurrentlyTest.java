@@ -30,11 +30,14 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;
 
+import org.junit.After;
 import org.junit.Test;
 
 import quickfix.field.TestReqID;
 import quickfix.fix42.TestRequest;
 import quickfix.mina.ProtocolFactory;
+import quickfix.mina.SingleThreadedEventHandlingStrategy;
+import quickfix.test.util.ThreadsUtil;
 
 public class SessionDisconnectConcurrentlyTest extends TestCase {
     private TestAcceptorApplication testAcceptorApplication;
@@ -42,6 +45,11 @@ public class SessionDisconnectConcurrentlyTest extends TestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
         testAcceptorApplication.tearDown();
+    }
+
+    @After
+    public void waitToStopThreads() {
+        ThreadsUtil.waitToStopThreads(SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME);
     }
 
     // QFJ-738

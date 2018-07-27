@@ -22,6 +22,8 @@ package quickfix.test.acceptance.timer;
 import junit.framework.TestCase;
 import quickfix.ConfigError;
 import quickfix.SessionNotFound;
+import quickfix.mina.SingleThreadedEventHandlingStrategy;
+import quickfix.test.util.ThreadsUtil;
 
 public class TimerTest extends TestCase {
     private Thread serverThread;
@@ -42,5 +44,6 @@ public class TimerTest extends TestCase {
     protected void tearDown() throws Exception {
         serverThread.interrupt();
         super.tearDown();
+        ThreadsUtil.waitToStopThreads(SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME);
     }
 }

@@ -37,6 +37,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.quickfixj.CharsetSupport;
 
@@ -73,6 +75,7 @@ public class FileStore implements MessageStore, Closeable {
     private RandomAccessFile senderSequenceNumberFile;
     private RandomAccessFile targetSequenceNumberFile;
     private SessionID sessionID;
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     FileStore(String path, SessionID sessionID, boolean syncWrites, int maxCachedMsgs)
             throws IOException {
@@ -105,21 +108,22 @@ public class FileStore implements MessageStore, Closeable {
     }
 
     void initialize(boolean deleteFiles) throws IOException {
+        try {
+            lock.writeLock().lock();
+            if (deleteFiles) {
+                deleteFiles();
+            } else {
+                close();
+            }
+            messageFileWriter = new RandomAccessFile(msgFileName, getRandomAccessFileOptions());
+            messageFileReader = new RandomAccessFile(msgFileName, READ_OPTION);
+            senderSequenceNumberFile = new RandomAccessFile(senderSeqNumFileName, getRandomAccessFileOptions());
+            targetSequenceNumberFile = new RandomAccessFile(targetSeqNumFileName, getRandomAccessFileOptions());
 
-        if (deleteFiles) {
-            zeroingSequenceNumbers();
-            closeFiles();
-            deleteFiles();
-        } else {
-            closeFiles();
+            initializeCache();
+        } finally {
+            lock.writeLock().unlock();
         }
-
-        messageFileWriter = new RandomAccessFile(msgFileName, getRandomAccessFileOptions());
-        messageFileReader = new RandomAccessFile(msgFileName, READ_OPTION);
-        senderSequenceNumberFile = new RandomAccessFile(senderSeqNumFileName, getRandomAccessFileOptions());
-        targetSequenceNumberFile = new RandomAccessFile(targetSeqNumFileName, getRandomAccessFileOptions());
-
-        initializeCache();
     }
 
     private void initializeCache() throws IOException {
@@ -165,7 +169,12 @@ public class FileStore implements MessageStore, Closeable {
      * @see quickfix.MessageStore#getCreationTime()
      */
     public Timestamp getCreationTime() throws IOException {
-        return cache.getCreationTime();
+        try {
+            lock.readLock().lock();
+            return cache.getCreationTime();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     private void initializeSequenceNumbers() throws IOException {
@@ -187,13 +196,6 @@ public class FileStore implements MessageStore, Closeable {
         } catch (IOException e) {
             throw new IOException(String.format("IO problem with file [%s]", targetSeqNumFileName), e);
         }
-    }
-
-    private void zeroingSequenceNumbers() throws IOException {
-        senderSequenceNumberFile.seek(0);
-        senderSequenceNumberFile.writeUTF("1");
-        targetSequenceNumberFile.seek(0);
-        targetSequenceNumberFile.writeUTF("1");
     }
 
     private void initializeMessageIndex() throws IOException {
@@ -254,11 +256,16 @@ public class FileStore implements MessageStore, Closeable {
      * @throws IOException
      */
     public void close() throws IOException {
-        closeOutputStream(headerDataOutputStream);
-        closeFile(messageFileWriter);
-        closeFile(messageFileReader);
-        closeFile(senderSequenceNumberFile);
-        closeFile(targetSequenceNumberFile);
+        try {
+            lock.writeLock().lock();
+            closeOutputStream(headerDataOutputStream);
+            closeFile(messageFileWriter);
+            closeFile(messageFileReader);
+            closeFile(senderSequenceNumberFile);
+            closeFile(targetSequenceNumberFile);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     private void closeFile(RandomAccessFile file) throws IOException {
@@ -284,12 +291,17 @@ public class FileStore implements MessageStore, Closeable {
     }
 
     public void deleteFiles() throws IOException {
-        close();
-        deleteFile(headerFileName);
-        deleteFile(msgFileName);
-        deleteFile(senderSeqNumFileName);
-        deleteFile(targetSeqNumFileName);
-        deleteFile(sessionFileName);
+        try {
+            lock.writeLock().lock();
+            close();
+            deleteFile(headerFileName);
+            deleteFile(msgFileName);
+            deleteFile(senderSeqNumFileName);
+            deleteFile(targetSeqNumFileName);
+            deleteFile(sessionFileName);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     private void deleteFile(String fileName) throws IOException {
@@ -303,53 +315,83 @@ public class FileStore implements MessageStore, Closeable {
      * @see quickfix.MessageStore#getNextSenderMsgSeqNum()
      */
     public int getNextSenderMsgSeqNum() throws IOException {
-        return cache.getNextSenderMsgSeqNum();
+        try {
+            lock.readLock().lock();
+            return cache.getNextSenderMsgSeqNum();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /* (non-Javadoc)
      * @see quickfix.MessageStore#getNextTargetMsgSeqNum()
      */
     public int getNextTargetMsgSeqNum() throws IOException {
-        return cache.getNextTargetMsgSeqNum();
+        try {
+            lock.readLock().lock();
+            return cache.getNextTargetMsgSeqNum();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /* (non-Javadoc)
      * @see quickfix.MessageStore#setNextSenderMsgSeqNum(int)
      */
     public void setNextSenderMsgSeqNum(int next) throws IOException {
-        cache.setNextSenderMsgSeqNum(next);
-        storeSenderSequenceNumber();
+        try {
+            lock.writeLock().lock();
+            cache.setNextSenderMsgSeqNum(next);
+            storeSenderSequenceNumber();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /* (non-Javadoc)
      * @see quickfix.MessageStore#setNextTargetMsgSeqNum(int)
      */
     public void setNextTargetMsgSeqNum(int next) throws IOException {
-        cache.setNextTargetMsgSeqNum(next);
-        storeTargetSequenceNumber();
+        try {
+            lock.writeLock().lock();
+            cache.setNextTargetMsgSeqNum(next);
+            storeTargetSequenceNumber();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /* (non-Javadoc)
      * @see quickfix.MessageStore#incrNextSenderMsgSeqNum()
      */
     public void incrNextSenderMsgSeqNum() throws IOException {
-        cache.incrNextSenderMsgSeqNum();
-        storeSenderSequenceNumber();
+        try {
+            lock.writeLock().lock();
+            cache.incrNextSenderMsgSeqNum();
+            storeSenderSequenceNumber();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /* (non-Javadoc)
      * @see quickfix.MessageStore#incrNextTargetMsgSeqNum()
      */
     public void incrNextTargetMsgSeqNum() throws IOException {
-        cache.incrNextTargetMsgSeqNum();
-        storeTargetSequenceNumber();
+        try {
+            lock.writeLock().lock();
+            cache.incrNextTargetMsgSeqNum();
+            storeTargetSequenceNumber();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /* (non-Javadoc)
      * @see quickfix.MessageStore#get(int, int, java.util.Collection)
      */
     public void get(int startSequence, int endSequence, Collection<String> messages)
-            throws IOException {
+        throws IOException {
         final Set<Integer> uncachedOffsetMsgIds = new HashSet<Integer>();
         // Use a treemap to make sure the messages are sorted by sequence num
         final TreeMap<Integer, String> messagesFound = new TreeMap<Integer, String>();
@@ -365,24 +407,29 @@ public class FileStore implements MessageStore, Closeable {
         if (!uncachedOffsetMsgIds.isEmpty()) {
             // parse the header file to find missing messages
             final File headerFile = new File(headerFileName);
-            final DataInputStream headerDataInputStream = new DataInputStream(
-                    new BufferedInputStream(new FileInputStream(headerFile)));
             try {
-                while (headerDataInputStream.available() > 0) {
-                    final int sequenceNumber = headerDataInputStream.readInt();
-                    final long offset = headerDataInputStream.readLong();
-                    final int size = headerDataInputStream.readInt();
-                    if (uncachedOffsetMsgIds.remove(sequenceNumber)) {
-                        final String message = getMessage(new long[] { offset, size },
-                                sequenceNumber);
-                        messagesFound.put(sequenceNumber, message);
+                lock.writeLock().lock();
+                final DataInputStream headerDataInputStream = new DataInputStream(
+                        new BufferedInputStream(new FileInputStream(headerFile)));
+                try {
+                    while (headerDataInputStream.available() > 0) {
+                        final int sequenceNumber = headerDataInputStream.readInt();
+                        final long offset = headerDataInputStream.readLong();
+                        final int size = headerDataInputStream.readInt();
+                        if (uncachedOffsetMsgIds.remove(sequenceNumber)) {
+                            final String message = getMessage(new long[]{offset, size},
+                                    sequenceNumber);
+                            messagesFound.put(sequenceNumber, message);
+                        }
+                        if (uncachedOffsetMsgIds.isEmpty()) {
+                            break;
+                        }
                     }
-                    if (uncachedOffsetMsgIds.isEmpty()) {
-                        break;
-                    }
+                } finally {
+                    headerDataInputStream.close();
                 }
             } finally {
-                headerDataInputStream.close();
+                lock.writeLock().unlock();
             }
         }
 
@@ -399,14 +446,19 @@ public class FileStore implements MessageStore, Closeable {
     }
 
     private String getMessage(int i) throws IOException {
-        String message = null;
-        if (messageIndex != null) {
-            final long[] offsetAndSize = messageIndex.get((long) i);
-            if (offsetAndSize != null) {
-                message = getMessage(offsetAndSize, i);
+        try {
+            lock.writeLock().lock();
+            String message = null;
+            if (messageIndex != null) {
+                final long[] offsetAndSize = messageIndex.get((long) i);
+                if (offsetAndSize != null) {
+                    message = getMessage(offsetAndSize, i);
+                }
             }
+            return message;
+        } finally {
+            lock.writeLock().unlock();
         }
-        return message;
     }
 
     private String getMessage(long[] offsetAndSize, int i) throws IOException {
@@ -429,20 +481,25 @@ public class FileStore implements MessageStore, Closeable {
      * @see quickfix.MessageStore#set(int, java.lang.String)
      */
     public boolean set(int sequence, String message) throws IOException {
-        final long offset = messageFileWriter.getFilePointer();
-        final int size = message.length();
-        if (messageIndex != null) {
-            updateMessageIndex((long) sequence, new long[] { offset, size });
+        try {
+            lock.writeLock().lock();
+            final long offset = messageFileWriter.getFilePointer();
+            final int size = message.length();
+            if (messageIndex != null) {
+                updateMessageIndex((long) sequence, new long[]{offset, size});
+            }
+            headerDataOutputStream.writeInt(sequence);
+            headerDataOutputStream.writeLong(offset);
+            headerDataOutputStream.writeInt(size);
+            headerDataOutputStream.flush();
+            if (syncWrites) {
+                headerFileOutputStream.getFD().sync();
+            }
+            messageFileWriter.write(message.getBytes(CharsetSupport.getCharset()));
+            return true;
+        } finally {
+            lock.writeLock().unlock();
         }
-        headerDataOutputStream.writeInt(sequence);
-        headerDataOutputStream.writeLong(offset);
-        headerDataOutputStream.writeInt(size);
-        headerDataOutputStream.flush();
-        if (syncWrites) {
-            headerFileOutputStream.getFD().sync();
-        }
-        messageFileWriter.write(message.getBytes(CharsetSupport.getCharset()));
-        return true;
     }
 
     private void storeSenderSequenceNumber() throws IOException {

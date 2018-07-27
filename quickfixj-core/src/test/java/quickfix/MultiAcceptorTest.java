@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
 import quickfix.field.TestReqID;
 import quickfix.fix42.TestRequest;
 import quickfix.mina.ProtocolFactory;
+import quickfix.mina.SingleThreadedEventHandlingStrategy;
+import quickfix.test.util.ThreadsUtil;
 
 public class MultiAcceptorTest extends TestCase {
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -39,6 +41,7 @@ public class MultiAcceptorTest extends TestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
         testAcceptorApplication.tearDown();
+        ThreadsUtil.waitToStopThreads(SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME);
     }
 
     public void testMultipleAcceptor() throws Exception {

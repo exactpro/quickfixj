@@ -29,6 +29,7 @@ import org.apache.mina.core.filterchain.IoFilterAdapter;
 import org.apache.mina.core.filterchain.IoFilterChain;
 import org.apache.mina.core.filterchain.IoFilterChainBuilder;
 import org.apache.mina.core.session.IoSession;
+import org.junit.After;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +45,10 @@ import quickfix.SessionSettings;
 import quickfix.SystemTime;
 import quickfix.ThreadedSocketInitiator;
 import quickfix.mina.ProtocolFactory;
+import quickfix.mina.SingleThreadedEventHandlingStrategy;
 import quickfix.test.acceptance.ATServer;
 import quickfix.test.util.ExpectedTestFailure;
+import quickfix.test.util.ThreadsUtil;
 
 public class SecureSocketTest extends TestCase {
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -53,6 +56,12 @@ public class SecureSocketTest extends TestCase {
 
     protected void setUp() throws Exception {
         SystemTime.setTimeSource(null);
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        ThreadsUtil.waitToStopThreads(SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME);
     }
 
     public void testLogonWithBadCertificate() throws Exception {
