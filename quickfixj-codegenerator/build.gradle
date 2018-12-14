@@ -1,78 +1,7 @@
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'eclipse'
 apply plugin: 'artifactory'
 
-sourceCompatibility = 1.7 //Java version compatibility to use when compiling Java source.
-targetCompatibility = 1.7 //Java version to generate classes for.
-
-buildscript {
-    repositories {
-        maven { url 'http://arti.exactpro.com/libs-release' }
-    }
-    dependencies {
-        classpath(group: 'org.jfrog.buildinfo', name: 'build-info-extractor-gradle', version: '2.2.+')
-    }
-}
-
 version 			= '1.6.0-SNAPSHOT'
-group   			= 'com.exactprosystems.testtools'
 archivesBaseName 	= 'quickfixj-code-generator'
-
-repositories {
-    maven {
-		url 'http://arti.exactpro.com/libs-release'
-    }
-}
-
-ext.sharedDir 	= file('../../shared')
-
-if (!project.hasProperty("revision")) {
-    ext.revision = "local_build" // mark local builds
-}
-if (!project.hasProperty("build_number")) {
-    ext.build_number = "local_build" // mark local builds
-}
-
-repositories {
-    maven {
-        name 'MavenLocal' // for local builds only
-        url sharedDir
-    }
-    maven {
-        name 'Artifactory'
-        url 'http://arti.exactpro.com/libs-snapshot'
-    }
-}
-
-configurations {
-    all {transitive = false}
-    all {resolutionStrategy.cacheChangingModulesFor 0, 'seconds' } // don't cache SNAPSHOTs
-}
-
-dependencies {
-    compile 'log4j:log4j:1.2.17'
-    compile 'org.slf4j:slf4j-api:1.7.2'
-    compile 'org.slf4j:slf4j-log4j12:1.7.2'
-    compile 'org.apache.maven:maven-plugin-api:3.2.5'
-    compile 'org.apache.maven:maven-project:2.2.1'
-    compile 'org.codehaus.plexus:plexus-utils:3.0.22'
-}
-
-jar {
-    manifest {
-        attributes('Implementation-Version': "${revision}")
-        attributes('Build_Number': "${build_number}")
-    }
-}
-
-uploadArchives {
-    repositories.mavenDeployer {
-        uniqueVersion = false // publish non unique snapshots to local repository
-        repository(url: "file://${sharedDir}")
-    }
-    doFirst { sharedDir.mkdirs() }
-}
 
 test.enabled = false
 compileTestJava.enabled = false

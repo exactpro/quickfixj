@@ -1,46 +1,7 @@
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'maven'
 apply plugin: 'artifactory'
 
 version = '1.6.0-SNAPSHOT'
-group   = 'com.exactprosystems.testtools'
 
-sourceCompatibility = 1.7 //Java version compatibility to use when compiling Java source.
-targetCompatibility = 1.7 //Java version to generate classes for.
-
-buildscript {
-    repositories {
-        maven { url 'http://arti.exactpro.com/libs-release' }
-    }
-    dependencies {
-        classpath(group: 'org.jfrog.buildinfo', name: 'build-info-extractor-gradle', version: '2.2.+')
-    }
-}
-
-ext.sharedDir = file('../../shared')
-
-repositories {
-    maven {
-        name 'MavenLocal' // for local builds only
-        url sharedDir
-    }
-    maven {
-        name 'Artifactory'
-        url 'http://arti.exactpro.com/libs-snapshot'
-    }
-}
-
-// Set defaults
-if (!project.hasProperty("revision")) {
-    ext.revision = "local_build" // mark local builds
-}
-if (!project.hasProperty("build_number")) {
-    ext.build_number = "local_build" // mark local builds
-}
-if (!project.hasProperty("release")) {
-    ext.release = "default"
-}
 ext {
     decimal = false
     dictDir = file("dicts/${release}")
@@ -60,48 +21,56 @@ sourceSets {
     }
 }
 
-configurations {
-    codegen
-    all {transitive = false}
-    all {resolutionStrategy.cacheChangingModulesFor 0, 'seconds' } // don't cache SNAPSHOTs
+eclipse {
+    classpath {
+        sourceSets -= [ sourceSets.test ]
+    }
 }
 
 dependencies {
-    compile 'org.hsqldb:hsqldb:2.3.2'
-    compile 'org.slf4j:slf4j-api:1.7.2'
-    compile 'org.slf4j:slf4j-log4j12:1.7.2'
-    compile 'log4j:log4j:1.2.17'
-    compile 'com.exactprosystems.testtools:apache-mina-core:2.0.9-SNAPSHOT'
-    compile 'com.cloudhopper.proxool:proxool:0.9.1'
-    compile 'org.apache.avalon.framework:avalon-framework-api:4.3.1'
-    compile 'org.slf4j:jcl-over-slf4j:1.7.12'
+    if (incremental_build) {
+        compile 'com.exactprosystems.testtools:apache-mina-core:2.0.9-SNAPSHOT'
+        provided 'com.exactprosystems.testtools:quickfixj-code-generator:1.6.0-SNAPSHOT'
+    } else {
+        compile project(':BackEnd:apache-mina-core-2.0.9')
+        provided project(':BackEnd:Quickfixj-1.6.0:quickfixj-codegenerator')
+    }
+
+    compile "org.slf4j:slf4j-api:${version_slf4j}"
+    //Transitive dependencies should be enable for using JdbcStore
+    compile group: 'com.cloudhopper.proxool', name: 'proxool', version: '0.9.1', transitive: false
+
+    //compile 'org.apache.avalon.framework:avalon-framework-api:4.3.1'
+
+    //Using for SleepycatStore
     compile 'berkeleydb:je:2.1.30'
+
     testCompile 'junit:junit:4.7'
     testCompile 'org.mockito:mockito-all:1.10.19'
     testCompile 'org.mockito:mockito-core:1.10.19'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
-
-
-    codegen 'com.exactprosystems.testtools:quickfixj-code-generator:1.6.0-SNAPSHOT'
+    testCompile 'org.hsqldb:hsqldb:2.3.2'
 }
 
 jar {
     //classifier = "${release}"
     manifest {
-	attributes('Implementation-Version': "${revision}")
         attributes("FIX-Project": "${release}")
-        attributes('Build_Number': "${build_number}")
     }
 }
 
 task generateMessage {
+/*	if (!incremental_build) {
+		dependsOn(':BackEnd:Quickfixj-1.6.0:quickfixj-codegenerator:assemble')
+	}*/
+
     doLast {
         println "###############################################"
         println "Currency will be treated as BigDecimal = ${decimal}"
         println "###############################################"
 
         javaexec {
-            classpath sourceSets.main.runtimeClasspath + configurations.codegen
+            classpath sourceSets.main.runtimeClasspath
             main 'org.quickfixj.codegenerator.MessageCodeGenerator'
             args = ["${dictDir}", './', 'src/gen/java']
             jvmArgs = ["-Dgenerator.decimal=${decimal}"]
@@ -110,14 +79,6 @@ task generateMessage {
 }
 
 compileJava.dependsOn.add('generateMessage')
-
-uploadArchives {
-    repositories.mavenDeployer {
-        uniqueVersion = false // publish non unique snapshots to local repository
-        repository(url: "file://${sharedDir}")
-    }
-    doFirst { sharedDir.mkdirs() }
-}
 
 clean {
     delete 'src/gen'
@@ -130,10 +91,6 @@ task zipDicts(type: Zip) {
 
 artifacts {
     archives(zipDicts)
-}
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.0'
 }
 
 test.enabled = false
