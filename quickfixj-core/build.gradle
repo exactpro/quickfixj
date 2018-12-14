@@ -3,11 +3,11 @@ apply plugin: 'eclipse'
 apply plugin: 'maven'
 apply plugin: 'artifactory'
 
-// Change output directory for jar (default 'build/lib')
-libsDirName = '../libs'
-
 version = '1.6.0-SNAPSHOT'
 group   = 'com.exactprosystems.testtools'
+
+sourceCompatibility = 1.7 //Java version compatibility to use when compiling Java source.
+targetCompatibility = 1.7 //Java version to generate classes for.
 
 buildscript {
     repositories {
@@ -31,9 +31,6 @@ repositories {
     }
 }
 
-test.enabled = false
-compileTestJava.enabled = false
-
 // Set defaults
 if (!project.hasProperty("revision")) {
     ext.revision = "local_build" // mark local builds
@@ -44,22 +41,27 @@ if (!project.hasProperty("build_number")) {
 if (!project.hasProperty("release")) {
     ext.release = "default"
 }
+ext {
+    decimal = false
+    dictDir = file("dicts/${release}")
+}
+
 archivesBaseName = "quickfixj-${release}"
 
 // Change default project layout
 sourceSets {
     main {
         java {
-            srcDir 'src/main/java'
-            srcDir '../quickfixj-codegenerator/srcgen'
+            srcDir 'src/gen/java'
         }
         resources {
-            srcDir "../dicts/${release}"
+            srcDir "${dictDir}"
         }
     }
 }
 
 configurations {
+    codegen
     all {transitive = false}
     all {resolutionStrategy.cacheChangingModulesFor 0, 'seconds' } // don't cache SNAPSHOTs
 }
@@ -74,6 +76,13 @@ dependencies {
     compile 'org.apache.avalon.framework:avalon-framework-api:4.3.1'
     compile 'org.slf4j:jcl-over-slf4j:1.7.12'
     compile 'berkeleydb:je:2.1.30'
+    testCompile 'junit:junit:4.7'
+    testCompile 'org.mockito:mockito-all:1.10.19'
+    testCompile 'org.mockito:mockito-core:1.10.19'
+    testCompile 'org.hamcrest:hamcrest-all:1.3'
+
+
+    codegen 'com.exactprosystems.testtools:quickfixj-code-generator:1.6.0-SNAPSHOT'
 }
 
 jar {
@@ -85,18 +94,22 @@ jar {
     }
 }
 
-task codegen (type: GradleBuild) {
-    buildFile ='../quickfixj-codegenerator/build_codegen.gradle'
-    startParameter.projectProperties = gradle.startParameter.projectProperties
-    tasks = [ 'assemble' ]
+task generateMessage {
+    doLast {
+        println "###############################################"
+        println "Currency will be treated as BigDecimal = ${decimal}"
+        println "###############################################"
+
+        javaexec {
+            classpath sourceSets.main.runtimeClasspath + configurations.codegen
+            main 'org.quickfixj.codegenerator.MessageCodeGenerator'
+            args = ["${dictDir}", './', 'src/gen/java']
+            jvmArgs = ["-Dgenerator.decimal=${decimal}"]
+        }
+    }
 }
 
-task cleanCodegen (type: GradleBuild) {
-    buildFile ='../quickfixj-codegenerator/build_codegen.gradle'
-    tasks = [ 'clean' ]
-}
-
-compileJava.dependsOn.add('codegen')
+compileJava.dependsOn.add('generateMessage')
 
 uploadArchives {
     repositories.mavenDeployer {
@@ -107,13 +120,12 @@ uploadArchives {
 }
 
 clean {
-    dependsOn.add("cleanCodegen")
-    delete 'srcgen'
+    delete 'src/gen'
 }
 
 task zipDicts(type: Zip) {
     classifier = 'dicts'
-    from ('../dicts')
+    from ('dicts')
 }
 
 artifacts {
@@ -123,3 +135,6 @@ artifacts {
 task wrapper(type: Wrapper) {
     gradleVersion = '2.0'
 }
+
+test.enabled = false
+compileTestJava.enabled = false
