@@ -4,37 +4,23 @@ version = '1.6.0-SNAPSHOT'
 
 ext {
     decimal = false
-    dictDir = file("dicts/${release}")
+    genDir = file('src/gen/java')
+    dictDir = file('src/main/dicts')
 }
 
-//archivesBaseName = "quickfixj-${release}"
+archivesBaseName = "quickfixj-core"
 
 // Change default project layout
 sourceSets {
     main {
         java {
-            srcDir 'src/gen/java'
-        }
-        resources {
-            srcDir "${dictDir}"
+            srcDir genDir
         }
     }
     test {
-        java {
-            srcDir 'src/test/java'
-        }
         resources {
-            srcDir 'src/test/resources'
-            srcDir  "${dictDir}"
-            srcDir 'src/main/'
-            //include 'config/**'
+            srcDir "${dictDir}"
         }
-    }
-}
-
-eclipse {
-    classpath {
-        sourceSets -= [ sourceSets.test ]
     }
 }
 
@@ -63,25 +49,9 @@ dependencies {
     testCompile 'org.hsqldb:hsqldb:2.3.2'
 }
 
-jar {
-    //classifier = "${release}"
-    manifest {
-        attributes("FIX-Project": "${release}")
-    }
-    exclude('quickfix/field/*.class')
-    exclude('quickfix/fix40')
-    exclude('quickfix/fix41')
-    exclude('quickfix/fix42')
-    exclude('quickfix/fix43')
-    exclude('quickfix/fix44')
-    exclude('quickfix/fix50')
-    exclude('quickfix/fixt11')
-}
-
 task generateMessage {
-/*	if (!incremental_build) {
-		dependsOn(':BackEnd:Quickfixj-1.6.0:quickfixj-codegenerator:assemble')
-	}*/
+	inputs.dir dictDir
+	outputs.dir genDir
 
     doLast {
         println "###############################################"
@@ -91,7 +61,7 @@ task generateMessage {
         javaexec {
             classpath sourceSets.main.runtimeClasspath
             main 'org.quickfixj.codegenerator.MessageCodeGenerator'
-            args = ["${dictDir}", './', 'src/gen/java']
+            args = ["${dictDir}", './', genDir]
             jvmArgs = ["-Dgenerator.decimal=${decimal}"]
         }
     }
@@ -102,18 +72,6 @@ compileJava.dependsOn.add('generateMessage')
 clean {
     delete 'src/gen'
 }
-
-task zipDicts(type: Zip) {
-    classifier = 'dicts'
-    from ('dicts')
-}
-
-artifacts {
-    archives(zipDicts)
-}
-
-test.enabled = false
-compileTestJava.enabled = false
 
 test {
     ignoreFailures = true

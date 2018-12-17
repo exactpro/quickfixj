@@ -191,6 +191,17 @@ public class SocketInitiatorTest {
         Initiator initiator = null;
         try {
             ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+
+            //This code block has been added for compensation the problems from other tests
+            ThreadInfo[] dumpAllThreads = bean.dumpAllThreads(false, false);
+            int qfjMPThreads = 0;
+            for (ThreadInfo threadInfo : dumpAllThreads) {
+                if (SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME.equals(threadInfo
+                        .getThreadName())) {
+                    qfjMPThreads--;
+                }
+            }
+
             SessionID clientSessionID = new SessionID(FixVersions.BEGINSTRING_FIX42, "TW", "ISLD");
             SessionSettings settings = getClientSessionSettings(clientSessionID);
             ClientApplication clientApplication = new ClientApplication();
@@ -198,8 +209,7 @@ public class SocketInitiatorTest {
                     new MemoryStoreFactory(), settings, new DefaultMessageFactory(), null);
             initiator.start();
             initiator.start();
-            ThreadInfo[] dumpAllThreads = bean.dumpAllThreads(false, false);
-            int qfjMPThreads = 0;
+            dumpAllThreads = bean.dumpAllThreads(false, false);
             for (ThreadInfo threadInfo : dumpAllThreads) {
                 if (SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME.equals(threadInfo
                         .getThreadName())) {
