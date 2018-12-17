@@ -1,0 +1,2 @@
+include 'quickfixj-core'
+include 'quickfixj-codegenerator'

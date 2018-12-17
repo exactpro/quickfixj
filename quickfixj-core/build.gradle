@@ -1,10 +1,9 @@
 apply plugin: 'artifactory'
+apply plugin: 'provided-base'
 
 version = '1.6.0-SNAPSHOT'
 
 ext {
-    decimal = false
-    genJavaDir = file('src/gen/java')
     dictDir = file('src/main/dicts')
 }
 
@@ -26,12 +25,12 @@ sourceSets {
 
 dependencies {
     if (incremental_build) {
-        compile 'com.exactprosystems.testtools:apache-mina-core:2.0.9-SNAPSHOT'
         compile 'com.exactprosystems.testtools:quickfixj-code-generator:1.6.0-SNAPSHOT'
     } else {
-        compile project(':BackEnd:apache-mina-core-2.0.9')
-        compile project(':BackEnd:Quickfixj-1.6.0:quickfixj-codegenerator')
+        compile project(':quickfixj-codegenerator')
     }
+
+    compile 'com.exactprosystems.testtools:apache-mina-core:2.0.9-SNAPSHOT'
 
     compile "org.slf4j:slf4j-api:${version_slf4j}"
 
@@ -40,6 +39,9 @@ dependencies {
     //Using for SleepycatStore
     compile 'berkeleydb:je:2.1.30'
 
+    provided "org.slf4j:slf4j-log4j12:${version_slf4j}"
+
+    testCompile "org.slf4j:slf4j-log4j12:${version_slf4j}"
     testCompile 'junit:junit:4.10'
     testCompile 'org.mockito:mockito-all:1.10.19'
     testCompile 'org.mockito:mockito-core:1.10.19'
@@ -52,15 +54,11 @@ task generateMessage {
 	outputs.dir genJavaDir
 
     doLast {
-        println "###############################################"
-        println "Currency will be treated as BigDecimal = ${decimal}"
-        println "###############################################"
-
         javaexec {
             classpath sourceSets.main.runtimeClasspath
             main 'org.quickfixj.codegenerator.MessageCodeGenerator'
             args = ["${dictDir}", './', genJavaDir]
-            jvmArgs = ["-Dgenerator.decimal=${decimal}"]
+            jvmArgs = ['-Dgenerator.decimal=true']
         }
     }
 }
