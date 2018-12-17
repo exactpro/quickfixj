@@ -4,7 +4,7 @@ version = '1.6.0-SNAPSHOT'
 
 ext {
     decimal = false
-    genDir = file('src/gen/java')
+    genJavaDir = file('src/gen/java')
     dictDir = file('src/main/dicts')
 }
 
@@ -14,7 +14,7 @@ archivesBaseName = "quickfixj-core"
 sourceSets {
     main {
         java {
-            srcDir genDir
+            srcDir genJavaDir
         }
     }
     test {
@@ -27,17 +27,15 @@ sourceSets {
 dependencies {
     if (incremental_build) {
         compile 'com.exactprosystems.testtools:apache-mina-core:2.0.9-SNAPSHOT'
-        provided 'com.exactprosystems.testtools:quickfixj-code-generator:1.6.0-SNAPSHOT'
+        compile 'com.exactprosystems.testtools:quickfixj-code-generator:1.6.0-SNAPSHOT'
     } else {
         compile project(':BackEnd:apache-mina-core-2.0.9')
-        provided project(':BackEnd:Quickfixj-1.6.0:quickfixj-codegenerator')
+        compile project(':BackEnd:Quickfixj-1.6.0:quickfixj-codegenerator')
     }
 
     compile "org.slf4j:slf4j-api:${version_slf4j}"
-    //Transitive dependencies should be enable for using JdbcStore
-    compile group: 'com.cloudhopper.proxool', name: 'proxool', version: '0.9.1', transitive: false
 
-    //compile 'org.apache.avalon.framework:avalon-framework-api:4.3.1'
+    compile 'com.cloudhopper.proxool:proxool:0.9.1'
 
     //Using for SleepycatStore
     compile 'berkeleydb:je:2.1.30'
@@ -51,7 +49,7 @@ dependencies {
 
 task generateMessage {
 	inputs.dir dictDir
-	outputs.dir genDir
+	outputs.dir genJavaDir
 
     doLast {
         println "###############################################"
@@ -61,17 +59,13 @@ task generateMessage {
         javaexec {
             classpath sourceSets.main.runtimeClasspath
             main 'org.quickfixj.codegenerator.MessageCodeGenerator'
-            args = ["${dictDir}", './', genDir]
+            args = ["${dictDir}", './', genJavaDir]
             jvmArgs = ["-Dgenerator.decimal=${decimal}"]
         }
     }
 }
 
 compileJava.dependsOn.add('generateMessage')
-
-clean {
-    delete 'src/gen'
-}
 
 test {
     ignoreFailures = true
