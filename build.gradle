@@ -29,7 +29,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
 
-    group = 'com.exactprosystems.testtools'
+    group = 'com.exactpro.quickfixj'
     version = '1.6.0.1-SNAPSHOT'
 
     sourceCompatibility = 1.7 //Java version compatibility to use when compiling Java source.

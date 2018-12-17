@@ -23,12 +23,12 @@ sourceSets {
 
 dependencies {
     if (incremental_build) {
-        compile 'com.exactprosystems.testtools:quickfixj-code-generator:1.6.0.1-SNAPSHOT'
+        compile 'com.exactpro.quickfixj:quickfixj-code-generator:1.6.0.1-SNAPSHOT'
     } else {
         compile project(':quickfixj-codegenerator')
     }
-
-    compile 'com.exactprosystems.testtools:apache-mina-core:2.0.9-SNAPSHOT'
+    
+    compile 'com.exactpro.mina:apache-mina-core:2.0.9-SNAPSHOT'
 
     compile "org.slf4j:slf4j-api:${version_slf4j}"
 
