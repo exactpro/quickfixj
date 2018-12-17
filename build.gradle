@@ -77,6 +77,10 @@ subprojects {
                 // fail eagerly on version conflict (includes transitive dependencies)
                 // e.g. multiple different versions of the same dependency (group and name are equal)
                 failOnVersionConflict()
+
+                force "org.slf4j:slf4j-api:${version_slf4j}",
+                      'commons-logging:commons-logging-api:1.1',
+                      'commons-logging:commons-logging:1.1.3'
     
                 // don't cache changing modules at all
                 cacheChangingModulesFor 0, 'seconds'

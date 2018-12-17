@@ -30,7 +30,8 @@ public class SerializationTest extends TestCase {
 
     private final String[] srcDirs = {
         "quickfixj-core/target/generated-sources",
-        "target/generated-sources"
+        "target/generated-sources",
+        "src/gen/java"
     };
 
     private String srcDir;
@@ -303,7 +304,8 @@ public class SerializationTest extends TestCase {
     private static final String[] classesBaseDirs = {
         "quickfixj-core/target/classes",
         "target/classes",
-        "classes"
+        "classes",
+        "build/classes/main"
     };
 
     private String getBaseDirectory() {

@@ -38,6 +38,7 @@ import org.apache.mina.core.filterchain.IoFilterChain;
 import org.apache.mina.core.filterchain.IoFilterChainBuilder;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.core.write.WriteRequest;
+import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -46,9 +47,17 @@ import org.slf4j.LoggerFactory;
 import quickfix.mina.ProtocolFactory;
 import quickfix.mina.SingleThreadedEventHandlingStrategy;
 import quickfix.test.acceptance.ATServer;
+import quickfix.test.util.ThreadsUtil;
 
 public class SocketInitiatorTest {
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private long timeout = 10000;
+
+    @After
+    public void waitToStopThreads() {
+        ThreadsUtil.waitToStopThreads(SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME, timeout);
+    }
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -192,15 +201,7 @@ public class SocketInitiatorTest {
         try {
             ThreadMXBean bean = ManagementFactory.getThreadMXBean();
 
-            //This code block has been added for compensation the problems from other tests
-            ThreadInfo[] dumpAllThreads = bean.dumpAllThreads(false, false);
             int qfjMPThreads = 0;
-            for (ThreadInfo threadInfo : dumpAllThreads) {
-                if (SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME.equals(threadInfo
-                        .getThreadName())) {
-                    qfjMPThreads--;
-                }
-            }
 
             SessionID clientSessionID = new SessionID(FixVersions.BEGINSTRING_FIX42, "TW", "ISLD");
             SessionSettings settings = getClientSessionSettings(clientSessionID);
@@ -209,7 +210,7 @@ public class SocketInitiatorTest {
                     new MemoryStoreFactory(), settings, new DefaultMessageFactory(), null);
             initiator.start();
             initiator.start();
-            dumpAllThreads = bean.dumpAllThreads(false, false);
+            ThreadInfo[] dumpAllThreads = bean.dumpAllThreads(false, false);
             for (ThreadInfo threadInfo : dumpAllThreads) {
                 if (SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME.equals(threadInfo
                         .getThreadName())) {

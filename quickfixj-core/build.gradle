@@ -39,14 +39,13 @@ dependencies {
     //Using for SleepycatStore
     compile 'berkeleydb:je:2.1.30'
 
-    provided "org.slf4j:slf4j-log4j12:${version_slf4j}"
-
-    testCompile "org.slf4j:slf4j-log4j12:${version_slf4j}"
     testCompile 'junit:junit:4.10'
     testCompile 'org.mockito:mockito-all:1.10.19'
     testCompile 'org.mockito:mockito-core:1.10.19'
-    testCompile 'org.hamcrest:hamcrest-all:1.3'
-    testCompile 'org.hsqldb:hsqldb:2.3.2'
+    testCompile 'org.hamcrest:hamcrest-all:1.1'
+    testCompile 'hsqldb:hsqldb:1.8.0.10'
+    testCompile 'tyrex:tyrex:1.0.1'
+    testCompile "org.slf4j:slf4j-jdk14:${version_slf4j}"
 }
 
 task generateMessage {
@@ -66,16 +65,14 @@ task generateMessage {
 compileJava.dependsOn.add('generateMessage')
 
 test {
-    ignoreFailures = true
 
+    // some jre versions are disable 'MD5' algorithm in it's 'java.security' file
+    jvmArgs "-Djava.security.properties=${projectDir.absolutePath}/src/test/resources/java.security"
     jvmArgs '-XX:MaxPermSize=128m'
 
     systemProperties 'atest.heartbeat' : '5'
     systemProperties 'atest.timeout' : '60000'
     systemProperties 'atest.reconnectDelay' : '5'
-
-    include '**/*Test.class'
-    include '**/AcceptanceTestSuite.class'
 
     exclude '**/*ForTest.class'
     exclude '**/Abstract*Test.class'

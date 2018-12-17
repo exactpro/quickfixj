@@ -462,6 +462,11 @@ public class RepeatingGroupTest extends TestCase {
             assertEquals(e.getMessage(), SessionRejectReason.REPEATING_GROUP_FIELDS_OUT_OF_ORDER, e
                     .getSessionRejectReason());
             assertEquals(661, e.getField());
+        } catch (final IncorrectDataFormat e) {
+            // expected because FieldException not thrown during new Message()
+            assertEquals(e.getMessage(), "Field [661] contains badly formatted data.", e
+                    .getMessage());
+            assertEquals(661, e.field);
         }
     }
 

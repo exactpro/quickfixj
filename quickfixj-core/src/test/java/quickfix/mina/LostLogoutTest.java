@@ -2,6 +2,7 @@ package quickfix.mina;
 
 import static org.junit.Assert.assertNotNull;
 
+import org.junit.After;
 import org.junit.Test;
 
 import quickfix.Application;
@@ -23,6 +24,7 @@ import quickfix.UnsupportedMessageType;
 import quickfix.field.Headline;
 import quickfix.field.MsgType;
 import quickfix.fix44.News;
+import quickfix.test.util.ThreadsUtil;
 
 /**
  * QFJ-790
@@ -49,6 +51,13 @@ public class LostLogoutTest {
     private ServerApp server;
     private ClientApp client;
     volatile String logoutMessage = null;
+
+    private long timeout = 10000;
+
+    @After
+    public void waitToStopThreads() {
+        ThreadsUtil.waitToStopThreads(SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME, timeout);
+    }
 
     @Test
     public void lostLogoutMessageTest() throws Exception {

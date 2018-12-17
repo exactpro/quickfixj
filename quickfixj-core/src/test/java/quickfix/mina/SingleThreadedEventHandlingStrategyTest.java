@@ -23,6 +23,8 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import static junit.framework.Assert.assertEquals;
+
+import org.junit.After;
 import org.junit.Test;
 import quickfix.ConfigError;
 import quickfix.DefaultSessionFactory;
@@ -32,6 +34,7 @@ import quickfix.ScreenLogFactory;
 import quickfix.SessionFactory;
 import quickfix.SessionSettings;
 import quickfix.UnitTestApplication;
+import quickfix.test.util.ThreadsUtil;
 
 /**
  *
@@ -42,6 +45,13 @@ public class SingleThreadedEventHandlingStrategyTest {
     DefaultSessionFactory sessionFactory = new DefaultSessionFactory(new UnitTestApplication(),
             new MemoryStoreFactory(), new ScreenLogFactory(true, true, true));
 
+    private long timeout = 10000;
+
+    @After
+    public void waitToStopThreads() {
+        ThreadsUtil.waitToStopThreads(SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME, timeout);
+    }
+
     @Test
     public void testDoubleStart() throws Exception {
         SingleThreadedEventHandlingStrategy ehs = null;
@@ -50,15 +60,16 @@ public class SingleThreadedEventHandlingStrategyTest {
             SessionSettings settings = new SessionSettings();
             SessionConnector connector = new SessionConnectorUnderTest(settings, sessionFactory);
             ehs = new SingleThreadedEventHandlingStrategy(connector, 1000);
+
             ehs.blockInThread();
             ehs.blockInThread();
+
             checkThreads(bean);
         } finally {
             if ( ehs != null ) {
                 ehs.stopHandlingMessages();
             }
         }
-
     }
 
     @Test
@@ -69,10 +80,12 @@ public class SingleThreadedEventHandlingStrategyTest {
             SessionSettings settings = new SessionSettings();
             SessionConnector connector = new SessionConnectorUnderTest(settings, sessionFactory);
             ehs = new SingleThreadedEventHandlingStrategy(connector, 1000);
+
             ehs.blockInThread();
             ehs.stopHandlingMessages();
             Thread.sleep(500);
             ehs.blockInThread();
+
             checkThreads(bean);
         } finally {
             if ( ehs != null ) {
@@ -86,8 +99,7 @@ public class SingleThreadedEventHandlingStrategyTest {
         ThreadInfo[] dumpAllThreads = bean.dumpAllThreads(false, false);
         int qfjMPThreads = 0;
         for (ThreadInfo threadInfo : dumpAllThreads) {
-            if (SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME.equals(threadInfo
-                    .getThreadName())) {
+            if (SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME.equals(threadInfo.getThreadName())) {
                 qfjMPThreads++;
             }
         }

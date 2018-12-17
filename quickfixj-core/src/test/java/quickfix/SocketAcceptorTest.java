@@ -31,12 +31,14 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
+import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import quickfix.mina.ProtocolFactory;
 import quickfix.mina.SingleThreadedEventHandlingStrategy;
+import quickfix.test.util.ThreadsUtil;
 
 /**
  * QFJ-643: Unable to restart a stopped acceptor (SocketAcceptor)
@@ -51,6 +53,13 @@ public class SocketAcceptorTest {
             "ACCEPTOR", "INITIATOR");
     private final SessionID initiatorSessionID = new SessionID(FixVersions.BEGINSTRING_FIX42,
             "INITIATOR", "ACCEPTOR");
+
+    private long timeout = 10000;
+
+    @After
+    public void waitToStopThreads() {
+        ThreadsUtil.waitToStopThreads(SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME, timeout);
+    }
 
     @Test
     public void testRestartOfAcceptor() throws Exception {

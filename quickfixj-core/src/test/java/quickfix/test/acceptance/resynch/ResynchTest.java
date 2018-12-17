@@ -25,12 +25,16 @@ import org.junit.Test;
 
 import quickfix.ConfigError;
 import quickfix.SessionNotFound;
+import quickfix.mina.SingleThreadedEventHandlingStrategy;
+import quickfix.test.util.ThreadsUtil;
 
 /**
  * This is testing the test framework rather than QFJ functionality per se
  */
 public class ResynchTest {
     private Thread serverThread;
+
+    private long timeout = 10000;
 
     ResynchTestServer server;
 
@@ -74,5 +78,6 @@ public class ResynchTest {
     @After
     public void tearDown() throws Exception {
         serverThread.interrupt();
+        ThreadsUtil.waitToStopThreads(SingleThreadedEventHandlingStrategy.MESSAGE_PROCESSOR_THREAD_NAME, timeout);
     }
 }
