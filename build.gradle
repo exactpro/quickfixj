@@ -36,6 +36,8 @@ allprojects {
         }
         //Lib versions
         version_slf4j = '1.7.5'
+
+        exactproVersion = '1'
     }
 }
 
@@ -46,7 +48,7 @@ subprojects {
     apply plugin: 'maven'
 
     group = 'com.exactpro.quickfixj'
-    version = '1.6.0.1-SNAPSHOT'
+    version = "1.6.0.${exactproVersion}"
 
     sourceCompatibility = 1.7 //Java version compatibility to use when compiling Java source.
     targetCompatibility = 1.7 //Java version to generate classes for.
@@ -54,15 +56,7 @@ subprojects {
 
     buildscript { // artifacrory plugin
         repositories {
-            maven {
-                name 'MavenLocal' // for local builds only
-                url sharedDir
-            }
-            maven { // for gradle fast plugin
-                name 'Artifactory'
-                url 'http://artifactory5.exp.exactpro.com/artifactory/libs-snapshot'
-            }
-            maven { url 'http://artifactory5.exp.exactpro.com/artifactory/libs-release' }
+            jcenter()
         }
         dependencies {
             classpath(group: 'org.jfrog.buildinfo',             name: 'build-info-extractor-gradle',        version: '2.2.+')
@@ -79,10 +73,7 @@ subprojects {
             name 'MavenLocal' // for local builds only
             url sharedDir
         }
-        maven {
-            name 'Artifactory'
-            url 'http://artifactory5.exp.exactpro.com/artifactory/libs-snapshot'
-        }
+        jcenter()
     }
 
     configurations {

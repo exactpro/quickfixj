@@ -44,7 +44,7 @@ dependencies {
         compile project(':quickfixj-codegenerator')
     }
     
-    compile 'com.exactpro.mina:apache-mina-core:2.0.9-SNAPSHOT'
+    compile 'com.exactpro.mina:apache-mina-core:2.0.9.1'
 
     compile "org.slf4j:slf4j-api:${version_slf4j}"
 
