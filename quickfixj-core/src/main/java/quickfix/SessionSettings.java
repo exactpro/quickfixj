@@ -193,7 +193,6 @@ public class SessionSettings {
      * Returns the defaults for the session-level settings.
      *
      * @return the default properties
-     * @throws ConfigError
      */
     public Properties getDefaultProperties() {
         try {
@@ -561,7 +560,7 @@ public class SessionSettings {
      * default value mechanism if you want to chain a custom properties object
      * with System properties as the default.
      *
-     * <code><pre>
+     * <code>
      * // Custom properties with System properties as default
      * Properties myprops = new Properties(System.getProperties());
      * myprops.load(getPropertiesInputStream());
@@ -572,7 +571,7 @@ public class SessionSettings {
      * myprops.load(getPropertiesInputStream());
      * myprops.putAll(System.getProperties());
      * settings.setVariableValues(myprops);
-     * </pre></code>
+     * </code>
      *
      * @param variableValues
      *

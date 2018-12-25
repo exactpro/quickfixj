@@ -79,7 +79,7 @@ public /*abstract*/ class Field<T> implements Serializable {
     }
 
     /**
-     * Return's the formatted field (tag=value<SOH>)
+     * Return's the formatted field (tag=value&lt;SOH&gt;)
      *
      * @return the formatted field
      */
