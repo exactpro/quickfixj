@@ -37,7 +37,7 @@ allprojects {
         //Lib versions
         version_slf4j = '1.7.5'
 
-        exactproVersion = '1'
+        exactproVersion = '2'
     }
 }
 

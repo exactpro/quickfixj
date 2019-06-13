@@ -128,8 +128,9 @@ public interface Application {
      * This callback is invoked when JFQ rejects received message
      * @param message rejected message
      * @param sessionId QuickFIX session ID
+     * @param reason reject reason
      */
-    void onMessageRejected(Message message, SessionID sessionId);
+    void onMessageRejected(Message message, SessionID sessionId, String reason);
 
     /**
      * This callback is invoked when JFQ disconnects session by internal reason
