@@ -172,7 +172,7 @@ public class ResynchTestServer extends MessageCracker implements Application, Ru
     }
 
     @Override
-    public void onMessageRejected(Message message, SessionID sessionId) {}
+    public void onMessageRejected(Message message, SessionID sessionId, String reason) {}
 
     /*
      * (non-Javadoc)

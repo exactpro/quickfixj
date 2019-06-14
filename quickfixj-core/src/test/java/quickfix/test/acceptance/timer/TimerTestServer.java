@@ -160,7 +160,7 @@ public class TimerTestServer extends MessageCracker implements Application, Runn
     }
 
     @Override
-    public void onMessageRejected(Message message, SessionID sessionId) {}
+    public void onMessageRejected(Message message, SessionID sessionId, String reason) {}
 
     /*
      * (non-Javadoc)

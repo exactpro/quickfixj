@@ -96,7 +96,7 @@ public class ATApplication implements Application {
     }
 
     @Override
-    public void onMessageRejected(Message message, SessionID sessionID) {}
+    public void onMessageRejected(Message message, SessionID sessionID, String reason) {}
 
     /*
      * (non-Javadoc)

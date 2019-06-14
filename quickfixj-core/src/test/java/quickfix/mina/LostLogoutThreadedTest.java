@@ -158,7 +158,7 @@ public class LostLogoutThreadedTest {
         }
 
         @Override
-        public void onMessageRejected(Message message, SessionID sessionID) {}
+        public void onMessageRejected(Message message, SessionID sessionID, String reason) {}
 
         /*
          * (non-Javadoc)
@@ -257,7 +257,7 @@ public class LostLogoutThreadedTest {
         }
 
         @Override
-        public void onMessageRejected(Message message, SessionID sessionID) {}
+        public void onMessageRejected(Message message, SessionID sessionID, String reason) {}
 
         /*
          * (non-Javadoc)

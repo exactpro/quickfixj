@@ -133,7 +133,7 @@ public class UnitTestApplication implements ApplicationExtended, SessionStateLis
     public void onHeartBeatTimeout() {
     }
 
-    public void onMessageRejected(Message message, SessionID sessionId) {}
+    public void onMessageRejected(Message message, SessionID sessionId, String reason) {}
 
     /*
      * (non-Javadoc)
