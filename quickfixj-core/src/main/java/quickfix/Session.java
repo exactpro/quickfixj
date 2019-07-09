@@ -1039,7 +1039,7 @@ public class Session implements Closeable {
             if (resetOrDisconnectIfRequired(message)) {
                 return;
             }
-            generateReject(message, e.getSessionRejectReason(), e.getField());
+            generateReject(message, e.getSessionRejectReason(), e.getField(), e.getMessage());
         } catch (final FieldNotFound e) {
             getLog().onErrorEvent("Rejecting invalid message: " + e + ": " + message);
             if (resetOrDisconnectIfRequired(message)) {
@@ -1048,13 +1048,13 @@ public class Session implements Closeable {
             if (sessionBeginString.compareTo(FixVersions.BEGINSTRING_FIX42) >= 0
                     && message.isApp()) {
                 generateBusinessReject(message,
-                        CONDITIONALLY_REQUIRED_FIELD_MISSING, e.field);
+                        CONDITIONALLY_REQUIRED_FIELD_MISSING, e.field, e.getMessage());
             } else {
                 if (msgType.equals(MsgType.LOGON)) {
                     getLog().onErrorEvent("Required field missing from logon");
                     disconnect("Required field missing from logon", true, true);
                 } else {
-                    generateReject(message, SessionRejectReason.REQUIRED_TAG_MISSING, e.field);
+                    generateReject(message, SessionRejectReason.REQUIRED_TAG_MISSING, e.field, e.getMessage());
                 }
             }
         } catch (final IncorrectDataFormat e) {
@@ -1062,10 +1062,10 @@ public class Session implements Closeable {
             if (resetOrDisconnectIfRequired(message)) {
                 return;
             }
-            generateReject(message, SessionRejectReason.INCORRECT_DATA_FORMAT_FOR_VALUE, e.field);
+            generateReject(message, SessionRejectReason.INCORRECT_DATA_FORMAT_FOR_VALUE, e.field, e.getMessage());
         } catch (final IncorrectTagValue e) {
             getLog().onErrorEvent("Rejecting invalid message: " + e + ": " + message);
-            generateReject(message, SessionRejectReason.VALUE_IS_INCORRECT, e.field);
+            generateReject(message, SessionRejectReason.VALUE_IS_INCORRECT, e.field, e.getMessage());
         } catch (final InvalidMessage e) {
             getLog().onErrorEvent("Skipping invalid message: " + e + ": " + message);
             if (resetOrDisconnectIfRequired(message)) {
@@ -1089,7 +1089,7 @@ public class Session implements Closeable {
                 return;
             }
             if (sessionBeginString.compareTo(FixVersions.BEGINSTRING_FIX42) >= 0) {
-                generateBusinessReject(message, UNSUPPORTED_MESSAGE_TYPE, 0);
+                generateBusinessReject(message, UNSUPPORTED_MESSAGE_TYPE, 0, e.getMessage());
             } else {
                 generateReject(message, "Unsupported message type");
             }
@@ -1124,12 +1124,12 @@ public class Session implements Closeable {
                 if (!(MessageUtils.isAdminMessage(msgType))
                         && (sessionBeginString.compareTo(FixVersions.BEGINSTRING_FIX42) >= 0)) {
                     generateBusinessReject(message, APPLICATION_NOT_AVAILABLE,
-                            0);
+                            0, t.getMessage());
                 } else {
                     if (msgType.equals(MsgType.LOGON)) {
                         disconnect("Problem processing Logon message", true, true);
                     } else {
-                        generateReject(message, SessionRejectReason.OTHER, 0);
+                        generateReject(message, SessionRejectReason.OTHER, 0, t.getMessage());
                     }
                 }
             } else {
@@ -1462,7 +1462,7 @@ public class Session implements Closeable {
                     return;
                 }
                 generateReject(sequenceReset, SessionRejectReason.VALUE_IS_INCORRECT,
-                        NewSeqNo.FIELD);
+                        NewSeqNo.FIELD, null);
             }
         }
     }
@@ -1490,9 +1490,10 @@ public class Session implements Closeable {
 
         reject.setString(Text.FIELD, str);
         sendRaw(reject, 0);
-        getLog().onErrorEvent("Reject sent for Message " + msgSeqNum + ": " + str);
+        String reasonText = "Reject sent for Message " + msgSeqNum + ": " + str;
+        getLog().onErrorEvent(reasonText);
 
-        application.onMessageRejected(message, sessionID, str);
+        application.onMessageRejected(message, sessionID, reasonText);
     }
 
     private boolean isPossibleDuplicate(Message message) throws FieldNotFound {
@@ -1500,13 +1501,13 @@ public class Session implements Closeable {
         return header.isSetField(PossDupFlag.FIELD) && header.getBoolean(PossDupFlag.FIELD);
     }
 
-    private void generateReject(Message message, int err, int field) throws IOException,
+    private void generateReject(Message message, int err, int field, String originReason) throws IOException,
             FieldNotFound {
         final String reason = SessionRejectReasonText.getMessage(err);
         if (!state.isLogonReceived()) {
             final String errorMessage = "Tried to send a reject while not logged on: " + reason
                     + " (field " + field + ")";
-            application.onMessageRejected(message, sessionID, reason);
+            application.onMessageRejected(message, sessionID, errorMessage);
             throw new SessionException(errorMessage);
         }
 
@@ -1564,15 +1565,21 @@ public class Session implements Closeable {
             state.unlockTargetMsgSeqNum();
         }
 
+        String reasonText = reason;
+
         if (reason != null && (field > 0 || err == SessionRejectReason.INVALID_TAG_NUMBER)) {
             setRejectReason(reject, field, reason, true);
-            getLog().onErrorEvent(
-                    "Reject sent for Message " + msgSeqNum + ": " + reason + ":" + field);
+            reasonText = "Reject sent for Message " + msgSeqNum + ": " + reason
+                    + (originReason != null ? " (" + originReason + ')' : "")
+                    + ":" + field;
+            getLog().onErrorEvent(reasonText);
         } else if (reason != null) {
             setRejectReason(reject, reason);
-            getLog().onErrorEvent("Reject sent for Message " + msgSeqNum + ": " + reason);
+            reasonText = "Reject sent for Message " + msgSeqNum + ": " + reason;
+            getLog().onErrorEvent(reasonText);
         } else {
-            getLog().onErrorEvent("Reject sent for Message " + msgSeqNum);
+            reasonText = "Reject sent for Message " + msgSeqNum;
+            getLog().onErrorEvent(reasonText);
         }
 
         if (enableLastMsgSeqNumProcessed) {
@@ -1581,7 +1588,7 @@ public class Session implements Closeable {
         }
 
         sendRaw(reject, 0);
-        application.onMessageRejected(message, sessionID, reason);
+        application.onMessageRejected(message, sessionID, reasonText);
     }
 
     private void setRejectReason(Message reject, String reason) {
@@ -1605,7 +1612,7 @@ public class Session implements Closeable {
         }
     }
 
-    private void generateBusinessReject(Message message, int err, int field) throws FieldNotFound,
+    private void generateBusinessReject(Message message, int err, int field, String originReason) throws FieldNotFound,
             IOException {
         final Message reject = messageFactory.create(sessionID.getBeginString(),
                 MsgType.BUSINESS_MESSAGE_REJECT);
@@ -1622,12 +1629,25 @@ public class Session implements Closeable {
 
         final String reason = BusinessRejectReasonText.getMessage(err);
         setRejectReason(reject, field, reason, field != 0);
-        getLog().onErrorEvent(
-                "Reject sent for Message " + msgSeqNum + (reason != null ? (": " + reason) : "")
-                        + (field != 0 ? (": tag=" + field) : ""));
+        StringBuilder reasonTextBuilder = new StringBuilder("Reject sent for Message ")
+                .append(msgSeqNum);
+        if (reason != null) {
+            reasonTextBuilder.append(": ")
+                    .append(reason);
+            if (originReason != null) {
+                reasonTextBuilder.append(" (")
+                        .append(originReason)
+                        .append(')');
+            }
+        }
+        if (field != 0) {
+            reasonTextBuilder.append(": tag=")
+                    .append(field);
+        }
+        getLog().onErrorEvent(reasonTextBuilder.toString());
 
         sendRaw(reject, 0);
-        application.onMessageRejected(message, sessionID, reason);
+        application.onMessageRejected(message, sessionID, reasonTextBuilder.toString());
     }
 
     private void nextTestRequest(Message testRequest) throws FieldNotFound, RejectLogon,
@@ -1752,13 +1772,13 @@ public class Session implements Closeable {
     }
 
     private void doBadCompID(Message msg) throws IOException, FieldNotFound {
-        generateReject(msg, SessionRejectReason.COMPID_PROBLEM, 0);
+        generateReject(msg, SessionRejectReason.COMPID_PROBLEM, 0, null);
         generateLogout();
     }
 
     private void doBadTime(Message msg) throws IOException, FieldNotFound {
         try {
-            generateReject(msg, SessionRejectReason.SENDINGTIME_ACCURACY_PROBLEM, 0);
+            generateReject(msg, SessionRejectReason.SENDINGTIME_ACCURACY_PROBLEM, 0, null);
             generateLogout();
         } catch (final SessionException ex) {
             generateLogout(ex.getMessage());
@@ -2410,7 +2430,7 @@ public class Session implements Closeable {
                 final Date origSendingTime = header.getUtcTimeStamp(OrigSendingTime.FIELD);
                 final Date sendingTime = header.getUtcTimeStamp(SendingTime.FIELD);
                 if (origSendingTime.compareTo(sendingTime) > 0) {
-                    generateReject(msg, SessionRejectReason.SENDINGTIME_ACCURACY_PROBLEM, 0);
+                    generateReject(msg, SessionRejectReason.SENDINGTIME_ACCURACY_PROBLEM, 0, null);
                     generateLogout();
                     return false;
                 }
@@ -2418,7 +2438,7 @@ public class Session implements Closeable {
                 // QFJ-703
                 if (requiresOrigSendingTime) {
                     generateReject(msg, SessionRejectReason.REQUIRED_TAG_MISSING,
-                            OrigSendingTime.FIELD);
+                            OrigSendingTime.FIELD, null);
                     return false;
                 }
             }
