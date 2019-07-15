@@ -23,6 +23,7 @@ allprojects {
         genJavaDir              = file("${genDir}/java")
 
         incremental_build       = project.hasProperty('i') ? true : false
+        sonatype_publish        = project.hasProperty('sonatypePublish') ? true : false
 
         // Set defaults
         if (!project.hasProperty("revision")) {
@@ -37,7 +38,7 @@ allprojects {
         //Lib versions
         version_slf4j = '1.7.5'
 
-        exactproVersion = '2'
+        exactproVersion = '3'
     }
 }
 
@@ -46,7 +47,10 @@ subprojects {
     apply plugin: 'jacoco'
     apply plugin: 'java'
     apply plugin: 'maven'
-    apply plugin: 'signing'
+
+    if (sonatype_publish) {
+        apply plugin: 'signing'
+    }
 
     group = 'com.exactpro.quickfixj'
     version = "1.6.0.${exactproVersion}"
@@ -126,39 +130,50 @@ subprojects {
     uploadArchives {
         repositories {
             mavenDeployer {
-                beforeDeployment { 
-                    MavenDeployment deployment -> signing.signPom(deployment) 
-                }
-                uniqueVersion = false // publish non unique snapshots to local repository
-                repository(url: "file://${sharedDir}")
+                if (sonatype_publish) {
+                    beforeDeployment { 
+                        MavenDeployment deployment -> signing.signPom(deployment) 
+                    }
 
-                pom.project {
-                    name 'Exactpro QuickFixJ'
-                    packaging 'jar'
-                    // optionally artifactId can be defined here 
-                    description 'QuickFixJ is one of such libraries we depend on and which was modified by Exactpro.'
-                    url 'https://github.com/Exactpro/quickfixj'
+                    repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
+                        authentication(userName: ossrhUsername, password: ossrhPassword)
+                    }
 
-                    scm {
-                        connection 'scm:git:https://github.com/Exactpro/quickfixj'
-                        developerConnection 'scm:git:https://github.com/Exactpro/quickfixj'
+                    snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
+                        authentication(userName: ossrhUsername, password: ossrhPassword)
+                    }
+
+                    pom.project {
+                        name 'Exactpro QuickFixJ'
+                        packaging 'jar'
+                        // optionally artifactId can be defined here 
+                        description 'QuickFixJ is one of such libraries we depend on and which was modified by Exactpro.'
                         url 'https://github.com/Exactpro/quickfixj'
-                    }
 
-                    licenses {
-                        license {
-                            name 'The Apache License, Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        scm {
+                            connection 'scm:git:https://github.com/Exactpro/quickfixj'
+                            developerConnection 'scm:git:https://github.com/Exactpro/quickfixj'
+                            url 'https://github.com/Exactpro/quickfixj'
+                        }
+
+                        licenses {
+                            license {
+                                name 'The Apache License, Version 2.0'
+                                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            }
+                        }
+
+                        developers {
+                            developer {
+                                id 'Nikita-Smirnov-Exactpro'
+                                name 'Nikita Smirnov'
+                                email 'nikita.smirnov@exactprosystems.com'
+                            }
                         }
                     }
-
-                    developers {
-                        developer {
-                            id 'Nikita-Smirnov-Exactpro'
-                            name 'Nikita Smirnov'
-                            email 'nikita.smirnov@exactprosystems.com'
-                        }
-                    }
+                } else {
+                    uniqueVersion = false // publish non unique snapshots to local repository
+                    repository(url: "file://${sharedDir}")
                 }
             }
         }
@@ -179,10 +194,11 @@ subprojects {
         archives sourcesJar, javadocJar
     }
 
-    signing {
-        sign configurations.archives
+    if (sonatype_publish) {
+        signing {
+            sign configurations.archives
+        }
     }
-
 
     clean {
         delete genDir
