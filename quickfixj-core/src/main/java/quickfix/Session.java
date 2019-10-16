@@ -952,7 +952,7 @@ public class Session implements Closeable {
             }
 
             if (msgType.equals(MsgType.LOGON)) {
-                if (sessionID.isFIXT()) {
+                if (sessionID.isFIXT() && message.isSetField(DefaultApplVerID.FIELD)) {
                     targetDefaultApplVerID.set(new ApplVerID(message
                             .getString(DefaultApplVerID.FIELD)));
                 }
