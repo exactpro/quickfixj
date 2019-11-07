@@ -1137,6 +1137,7 @@ public class Session implements Closeable {
                 // and to have a clear notion of what is thrown out of this method.
                 // Throwing RuntimeError here means that the target seqnum is not incremented
                 // and a resend will be triggered by the next incoming message.
+                application.onMessageRejected(message, sessionID, t.getMessage());
                 throw new RuntimeError(t);
             }
         }
