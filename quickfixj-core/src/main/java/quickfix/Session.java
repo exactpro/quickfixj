@@ -2616,6 +2616,10 @@ public class Session implements Closeable {
         return sendRaw(message, 0);
     }
 
+    public boolean sendRaw(Message message) {
+        return sendRaw(message, 0);
+    }
+
     public boolean send(String messageString) {
         getLog().onOutgoing(messageString);
         Responder responder;
