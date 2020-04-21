@@ -692,7 +692,7 @@ public class DataDictionary {
     }
 
     private static boolean isVersionSpecified(DataDictionary dd) {
-        return dd != null && dd.hasVersion;
+        return dd != null && dd.hasVersion();
     }
 
     public void iterate(FieldMap map, String msgType, DataDictionary dd) throws IncorrectTagValue,
