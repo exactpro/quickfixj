@@ -2559,10 +2559,14 @@ public class Session implements Closeable {
             }
 
             if (result) {
-                if (message.isAdmin()) {
-                    application.onSendToAdmin(message, sessionID);
-                } else {
-                    application.onSendToApp(message, sessionID);
+                try {
+                    if (message.isAdmin()) {
+                        application.onSendToAdmin(message, sessionID);
+                    } else {
+                        application.onSendToApp(message, sessionID);
+                    }
+                } catch (Exception ex) {
+                    logThrowable(getLog(), "Error handling sent message to " + (message.isAdmin() ? "admin" : "app"), ex);
                 }
             }
 
