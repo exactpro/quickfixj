@@ -95,10 +95,15 @@ class AcceptorIoHandler extends AbstractIoHandler {
                     }
                     sessionLog.onEvent("Accepting session " + qfSession.getSessionID() + " from "
                             + protocolSession.getRemoteAddress());
-                    final int heartbeatInterval = message.getInt(HeartBtInt.FIELD);
-                    qfSession.setHeartBeatInterval(heartbeatInterval);
-                    sessionLog.onEvent("Acceptor heartbeat set to " + heartbeatInterval
-                            + " seconds");
+                    if (message.isSetField(HeartBtInt.FIELD)) {
+                        final int heartbeatInterval = message.getInt(HeartBtInt.FIELD);
+                        qfSession.setHeartBeatInterval(heartbeatInterval);
+                        sessionLog.onEvent("Acceptor heartbeat set to " + heartbeatInterval
+                                + " seconds");
+                    } else {
+                        sessionLog.onEvent("Logon message didn't contain Heartbeat Interval. Acceptor used default value " + qfSession.getSessionState().getHeartBeatInterval()
+                                + " seconds");
+                    }
                     protocolSession.setAttribute(SessionConnector.QF_SESSION, qfSession);
                     final NetworkingOptions networkingOptions = getNetworkingOptions();
                     qfSession.setResponder(new IoSessionResponder(protocolSession,
