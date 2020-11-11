@@ -33,38 +33,39 @@ import quickfix.SystemTime;
  * and a time.
  */
 public class UtcTimestampConverter extends AbstractDateTimeConverter {
-    private static final ThreadLocal<UtcTimestampConverter> utcTimestampConverter = new ThreadLocal<UtcTimestampConverter>();
-    private final DateFormat utcTimestampFormat = createDateFormat("yyyyMMdd-HH:mm:ss");
-    private final DateFormat utcTimestampFormatMillis = createDateFormat("yyyyMMdd-HH:mm:ss.SSS");
+    // SimpleDateFormats are not thread safe. A thread local is being
+    // used to maintain high concurrency among multiple session threads
+    private static final ThreadLocal<DateFormat> UTC_TIMESTAMP_FORMAT = new ThreadLocal<DateFormat>() {
+        @Override
+        protected DateFormat initialValue() {
+            return createDateFormat("yyyyMMdd-HH:mm:ss");
+        }
+    };
     private final static ConcurrentHashMap<String, Long> dateCache = new ConcurrentHashMap<String, Long>();
 
     /**
      * Convert a timestamp (represented as a Timestamp) to a String.
-     *
-     * @param d the date to convert
+     * @param timestamp the date to convert
+     * @param includeMilliseconds controls whether milliseconds are included in the result
+     * @param includeMicroseconds controls whether microseconds are included in the result
+     * @param includeNanoseconds controls whether nanoseconds are included in the result
+     * @return the formatted timestamp
+     */
+    public static String convert(Timestamp timestamp, boolean includeMilliseconds, boolean includeMicroseconds, boolean includeNanoseconds) {
+    	TimePrecision timePrecision = TimePrecision.chooseSuitable(includeMilliseconds, includeMicroseconds, includeNanoseconds);
+    	return UTC_TIMESTAMP_FORMAT.get().format(timestamp)
+                + timePrecision.print(timestamp.getNanos());
+    }
+
+    /**
+     * Convert a timestamp (represented as a Timestamp) to a String.
+     * @param timestamp the date to convert
      * @param includeMilliseconds controls whether milliseconds are included in the result
      * @param includeMicroseconds controls whether microseconds are included in the result
      * @return the formatted timestamp
      */
-    public static String convert(Timestamp d, boolean includeMilliseconds, boolean includeMicroseconds) {
-    	includeMilliseconds = includeMicroseconds || includeMilliseconds;
-        String formattedDate = getFormatter(includeMilliseconds).format(d);
-
-        if (includeMicroseconds) {
-            int micro = d.getNanos() / 1000 % 1000;
-            return formattedDate + String.format("%03d", micro);
-        }
-
-        return formattedDate;
-    }
-
-    private static DateFormat getFormatter(boolean includeMillis) {
-        UtcTimestampConverter converter = utcTimestampConverter.get();
-        if (converter == null) {
-            converter = new UtcTimestampConverter();
-            utcTimestampConverter.set(converter);
-        }
-        return includeMillis ? converter.utcTimestampFormatMillis : converter.utcTimestampFormat;
+    public static String convert(Timestamp timestamp, boolean includeMilliseconds, boolean includeMicroseconds) {
+        return convert(timestamp, includeMilliseconds, includeMicroseconds, false);
     }
 
     //
@@ -87,15 +88,10 @@ public class UtcTimestampConverter extends AbstractDateTimeConverter {
                 + (parseLong(value.substring(12, 14)) * 60000L)
                 + (parseLong(value.substring(15, 17)) * 1000L);
         Timestamp result = new Timestamp(getMillisForDay(value) + timeOffset);
-        
-        switch (value.length()) {
-        case 24:
-        	nanosecond += parseLong(value.substring(21, 24)) * 1_000;
-		case 21:
-			nanosecond += parseLong(value.substring(18, 21)) * 1_000_000;
-		default:
-			break;
-		}
+
+        if (value.length() > 18) {
+            nanosecond = parseFractionOfSeconds(value.substring(18));
+        }
         result.setNanos(nanosecond);
         
         return result;
@@ -119,7 +115,10 @@ public class UtcTimestampConverter extends AbstractDateTimeConverter {
 
     private static void verifyFormat(String value) throws FieldConvertError {
         String type = "timestamp";
-        if (value.length() != 17 && value.length() != 21  && value.length() != 24) {
+        if (value.length() != 17
+                && value.length() != 21
+                && value.length() != 24
+                && value.length() != 27) {
             throwFieldConvertError(value, type);
         }
         assertDigitSequence(value, 0, 8, type);
@@ -131,6 +130,8 @@ public class UtcTimestampConverter extends AbstractDateTimeConverter {
         assertDigitSequence(value, 15, 17, type);
 
         switch (value.length()) {
+        case 27: //nanoseconds
+            assertDigitSequence(value, 24, 27, type);
         case 24: //microseconds
         	assertDigitSequence(value, 21, 24, type);
         case 21: //milliseconds			

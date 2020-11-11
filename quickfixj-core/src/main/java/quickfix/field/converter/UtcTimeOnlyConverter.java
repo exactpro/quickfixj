@@ -22,7 +22,6 @@ package quickfix.field.converter;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.Date;
 
 import quickfix.FieldConvertError;
 
@@ -32,37 +31,37 @@ import quickfix.FieldConvertError;
 public class UtcTimeOnlyConverter extends AbstractDateTimeConverter {
     // SimpleDateFormats are not thread safe. A thread local is being
     // used to maintain high concurrency among multiple session threads
-    private static final ThreadLocal<UtcTimeOnlyConverter> utcTimeConverter = new ThreadLocal<UtcTimeOnlyConverter>();
-    private final DateFormat utcTimeFormat = createDateFormat("HH:mm:ss");
-    private final DateFormat utcTimeFormatMillis = createDateFormat("HH:mm:ss.SSS");
+    private static final ThreadLocal<DateFormat> UTC_TIMESTAMP_FORMAT = new ThreadLocal<DateFormat>() {
+        @Override
+        protected DateFormat initialValue() {
+            return createDateFormat("HH:mm:ss");
+        }
+    };
 
     /**
      * Convert a time (represented as a Timestamp) to a String (HH:MM:SS or HH:MM:SS.SSS)
      *
-     * @param d the date with the time to convert
+     * @param timestamp the date with the time to convert
      * @param includeMilliseconds controls whether milliseconds are included in the result
      * @param includeMicroseconds controls whether microseconds are included in the result
+     * @param includeNanoseconds controls whether nanoseconds are included in the result
      * @return a String representing the time.
      */
-    public static String convert(Timestamp d, boolean includeMilliseconds, boolean includeMicroseconds) {
-    	includeMilliseconds = includeMicroseconds || includeMilliseconds;
-    	String formattedDate = getFormatter(includeMilliseconds).format(d);
-
-        if (includeMicroseconds) {
-            int micro = d.getNanos() / 1000 % 1000;
-            return formattedDate + String.format("%03d", micro);
-        }
-
-        return formattedDate;
+    public static String convert(Timestamp timestamp, boolean includeMilliseconds, boolean includeMicroseconds, boolean includeNanoseconds) {
+        TimePrecision timePrecision = TimePrecision.chooseSuitable(includeMilliseconds, includeMicroseconds, includeNanoseconds);
+        return UTC_TIMESTAMP_FORMAT.get().format(timestamp)
+                + timePrecision.print(timestamp.getNanos());
     }
 
-    private static DateFormat getFormatter(boolean includeMillis) {
-        UtcTimeOnlyConverter converter = utcTimeConverter.get();
-        if (converter == null) {
-            converter = new UtcTimeOnlyConverter();
-            utcTimeConverter.set(converter);
-        }
-        return includeMillis ? converter.utcTimeFormatMillis : converter.utcTimeFormat;
+    /**
+     * Convert a timestamp (represented as a Timestamp) to a String.
+     * @param timestamp the date to convert
+     * @param includeMilliseconds controls whether milliseconds are included in the result
+     * @param includeMicroseconds controls whether microseconds are included in the result
+     * @return the formatted timestamp
+     */
+    public static String convert(Timestamp timestamp, boolean includeMilliseconds, boolean includeMicroseconds) {
+        return convert(timestamp, includeMilliseconds, includeMicroseconds, false);
     }
 
     /**
@@ -73,29 +72,29 @@ public class UtcTimeOnlyConverter extends AbstractDateTimeConverter {
      * @throws FieldConvertError raised for invalid time string
      */
     public static Timestamp convert(String value) throws FieldConvertError {
-    	Timestamp d = null;
+        Timestamp d = null;
         try {
-        	int nanosecond = 0;
-        	Date date = null;
-        	switch (value.length()) {
-        	case 15:
-        		nanosecond += parseLong(value.substring(12, 15)) * 1_000;
-        	case 12:
-        		date = getFormatter(true).parse(value.substring(0, 12));
-        		break;
-        	case 8:
-        		date = getFormatter(false).parse(value);
-				break;
-			default:
-				throwFieldConvertError(value, "time");
-			}
-        	d = new Timestamp(date.getTime());
-        	nanosecond += d.getNanos();
-        	d.setNanos(nanosecond);
+            verifyFormat(value);
+            d = new Timestamp(UTC_TIMESTAMP_FORMAT.get()
+                    .parse(value.substring(0, 8)).getTime());
+            int nanosecond = 0;
+            if (value.length() > 9) {
+                nanosecond = parseFractionOfSeconds(value.substring(9));
+            }
+            d.setNanos(nanosecond);
         } catch (ParseException e) {
             throwFieldConvertError(value, "time");
         }
         return d;
+    }
+
+    private static void verifyFormat(String value) throws FieldConvertError {
+        if (value.length() != 8
+                && value.length() != 12
+                && value.length() != 15
+                && value.length() != 18) {
+            throwFieldConvertError(value, "time");
+        }
     }
 
 }

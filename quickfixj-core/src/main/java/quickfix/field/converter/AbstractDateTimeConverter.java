@@ -19,6 +19,8 @@
 
 package quickfix.field.converter;
 
+import static java.lang.String.format;
+
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
@@ -63,7 +65,73 @@ abstract class AbstractDateTimeConverter {
         return n;
     }
 
-    protected DateFormat createDateFormat(String format) {
+    /**
+     * Parses fractions of seconds to nanoseconds
+     * @param value in format 3, 6 or 9 digits
+     * @return nanoseconds
+     */
+    protected static int parseFractionOfSeconds(String value) {
+        int nanosecond = 0;
+        switch (value.length()) {
+        case 9:
+            nanosecond += parseLong(value.substring(6, 9));
+        case 6:
+            nanosecond += parseLong(value.substring(3, 6)) * 1_000;
+        case 3:
+            nanosecond += parseLong(value.substring(0, 3)) * 1_000_000;
+        default:
+            break;
+        }
+        return nanosecond;
+    }
+
+    protected enum TimePrecision {
+        SECOND {
+            @Override
+            protected String print(int nanoseconds) {
+                return "";
+            }
+        },
+        MILLISECOND {
+            @Override
+            protected String print(int nanoseconds) {
+                return format(".%03d", nanoseconds / 1_000_000);
+            }
+        },
+        MICROSECOND {
+            @Override
+            protected String print(int nanoseconds) {
+                return format(".%06d", nanoseconds / 1_000);
+            }
+        },
+        NANOSECOND {
+            @Override
+            protected String print(int nanoseconds) {
+                return format(".%09d", nanoseconds);
+            }
+        };
+
+        /**
+         * Prints fraction of seconds with dot prefix
+         * @param nanoseconds
+         * @return
+         */
+        protected abstract String print(int nanoseconds);
+
+        protected static TimePrecision chooseSuitable(boolean includeMilliseconds, boolean includeMicroseconds, boolean includeNanoseconds) {
+            if (includeNanoseconds) {
+                return NANOSECOND;
+            } else if (includeMicroseconds) {
+                return MICROSECOND;
+            } else if (includeMilliseconds) {
+                return MILLISECOND;
+            } else {
+                return SECOND;
+            }
+        }
+    }
+
+    protected static DateFormat createDateFormat(String format) {
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         sdf.setDateFormatSymbols(new DateFormatSymbols(Locale.US));

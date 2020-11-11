@@ -19,7 +19,6 @@
 
 package quickfix;
 
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
@@ -168,67 +167,65 @@ public class FieldConvertersTest extends TestCase {
     public void testUtcTimeStampConversion() throws Exception {
         Calendar c = new GregorianCalendar(2000, 3, 26, 12, 5, 6);
         c.setTimeZone(TimeZone.getTimeZone("UTC"));
-        c.set(Calendar.MILLISECOND, 555);
         Timestamp timestamp = new Timestamp(c.getTimeInMillis());
+        timestamp.setNanos(123456789);
         assertEquals("20000426-12:05:06", UtcTimestampConverter.convert(timestamp,
         		false, false));
-        assertEquals("20000426-12:05:06.555", UtcTimestampConverter.convert(timestamp,
+        assertEquals("20000426-12:05:06.123", UtcTimestampConverter.convert(timestamp,
         		true, false));
-        assertEquals("20000426-12:05:06.555000", UtcTimestampConverter.convert(timestamp,
+        assertEquals("20000426-12:05:06.123456", UtcTimestampConverter.convert(timestamp,
         		true, true));
+        assertEquals("20000426-12:05:06.123456789", UtcTimestampConverter.convert(timestamp,
+                true, true, true));
 
-
-        timestamp.setNanos(timestamp.getNanos() + 123_000);
-        assertEquals("20000426-12:05:06.555123", UtcTimestampConverter.convert(timestamp,
+        timestamp.setNanos(0);
+        assertEquals("20000426-12:05:06", UtcTimestampConverter.convert(timestamp,
+                false, false));
+        assertEquals("20000426-12:05:06.000", UtcTimestampConverter.convert(timestamp,
+                true, false));
+        assertEquals("20000426-12:05:06.000000", UtcTimestampConverter.convert(timestamp,
                 true, true));
+        assertEquals("20000426-12:05:06.000000000", UtcTimestampConverter.convert(timestamp,
+                true, true, true));
 
-        Date date = UtcTimestampConverter.convert("20000426-12:05:06.555");
-        c.setTime(date);
-        assertEquals(12, c.get(Calendar.HOUR_OF_DAY));
-        assertEquals(5, c.get(Calendar.MINUTE));
-        assertEquals(6, c.get(Calendar.SECOND));
-        assertEquals(555, c.get(Calendar.MILLISECOND));
-        assertEquals(2000, c.get(Calendar.YEAR));
-        assertEquals(3, c.get(Calendar.MONTH));
-        assertEquals(26, c.get(Calendar.DAY_OF_MONTH));
+        timestamp = UtcTimestampConverter.convert("20000426-12:05:06");
+        checkCalendar(timestamp, 12, 5, 6, 2000, 3, 26, 0);
 
-        timestamp = UtcTimestampConverter.convert("20000426-12:05:06.555236");
-        c.setTime(timestamp);
-        assertEquals(12, c.get(Calendar.HOUR_OF_DAY));
-        assertEquals(5, c.get(Calendar.MINUTE));
-        assertEquals(6, c.get(Calendar.SECOND));
-        assertEquals(555, c.get(Calendar.MILLISECOND));
-        assertEquals(2000, c.get(Calendar.YEAR));
-        assertEquals(3, c.get(Calendar.MONTH));
-        assertEquals(26, c.get(Calendar.DAY_OF_MONTH));
-        assertEquals(555_236_000, timestamp.getNanos());
+        timestamp = UtcTimestampConverter.convert("20000426-12:05:06.123");
+        checkCalendar(timestamp, 12, 5, 6, 2000, 3, 26, 123_000_000);
+
+        timestamp = UtcTimestampConverter.convert("20000426-12:05:06.123456");
+        checkCalendar(timestamp, 12, 5, 6, 2000, 3, 26, 123_456_000);
+
+        timestamp = UtcTimestampConverter.convert("20000426-12:05:06.123456789");
+        checkCalendar(timestamp, 12, 5, 6, 2000, 3, 26, 123_456_789);
 
         try {
-            UtcTimestampConverter.convert("2000042x-12:05:06.555");
+            UtcTimestampConverter.convert("2000042x-12:05:06.123");
             fail();
         } catch (FieldConvertError e) {
             // expected
         }
         try {
-            UtcTimestampConverter.convert("200004261-2:05:06.555");
+            UtcTimestampConverter.convert("200004261-2:05:06.123");
             fail();
         } catch (FieldConvertError e) {
             // expected
         }
         try {
-            UtcTimestampConverter.convert("20000426-1205:06.555");
+            UtcTimestampConverter.convert("20000426-1205:06.123");
             fail();
         } catch (FieldConvertError e) {
             // expected
         }
         try {
-            UtcTimestampConverter.convert("20000426-12:0506.555");
+            UtcTimestampConverter.convert("20000426-12:0506.123");
             fail();
         } catch (FieldConvertError e) {
             // expected
         }
         try {
-            UtcTimestampConverter.convert("20000426-12:05:06555");
+            UtcTimestampConverter.convert("20000426-12:05:06123");
             fail();
         } catch (FieldConvertError e) {
             // expected
@@ -238,32 +235,38 @@ public class FieldConvertersTest extends TestCase {
     public void testUtcTimeOnlyConversion() throws Exception {
         Calendar c = new GregorianCalendar(0, 0, 0, 12, 5, 6);
         c.setTimeZone(TimeZone.getTimeZone("UTC"));
-        c.set(Calendar.MILLISECOND, 555);
-
         Timestamp timestamp = new Timestamp(c.getTimeInMillis());
+        timestamp.setNanos(123456789);
         assertEquals("12:05:06", UtcTimeOnlyConverter.convert(timestamp,
                 false, false));
-        assertEquals("12:05:06.555", UtcTimeOnlyConverter.convert(timestamp,
+        assertEquals("12:05:06.123", UtcTimeOnlyConverter.convert(timestamp,
                 true, false));
-        assertEquals("12:05:06.555000", UtcTimeOnlyConverter.convert(timestamp,
+        assertEquals("12:05:06.123456", UtcTimeOnlyConverter.convert(timestamp,
                 true, true));
+        assertEquals("12:05:06.123456789", UtcTimeOnlyConverter.convert(timestamp,
+                true, true, true));
 
-        timestamp.setNanos(724_539_000);
-        assertEquals("12:05:06.724539", UtcTimeOnlyConverter.convert(timestamp,
-                true, true));
-        assertEquals("12:05:06.724", UtcTimeOnlyConverter.convert(timestamp,
+        timestamp.setNanos(0);
+        assertEquals("12:05:06", UtcTimeOnlyConverter.convert(timestamp,
+                false, false));
+        assertEquals("12:05:06.000", UtcTimeOnlyConverter.convert(timestamp,
                 true, false));
+        assertEquals("12:05:06.000000", UtcTimeOnlyConverter.convert(timestamp,
+                true, true));
+        assertEquals("12:05:06.000000000", UtcTimeOnlyConverter.convert(timestamp,
+                true, true, true));
 
-        Timestamp date = UtcTimeOnlyConverter.convert("12:05:06.724539");
-        c.setTime(date);
-        assertEquals(12, c.get(Calendar.HOUR_OF_DAY));
-        assertEquals(5, c.get(Calendar.MINUTE));
-        assertEquals(6, c.get(Calendar.SECOND));
-        assertEquals(724, c.get(Calendar.MILLISECOND));
-        assertEquals(1970, c.get(Calendar.YEAR));
-        assertEquals(0, c.get(Calendar.MONTH));
-        assertEquals(1, c.get(Calendar.DAY_OF_MONTH));
-        assertEquals(724_539_000, date.getNanos());
+        timestamp = UtcTimeOnlyConverter.convert("12:05:06");
+        checkCalendar(timestamp, 12, 5, 6, 1970, 0, 1, 0);
+
+        timestamp = UtcTimeOnlyConverter.convert("12:05:06.123");
+        checkCalendar(timestamp, 12, 5, 6, 1970, 0, 1, 123_000_000);
+
+        timestamp = UtcTimeOnlyConverter.convert("12:05:06.123456");
+        checkCalendar(timestamp, 12, 5, 6, 1970, 0, 1, 123_456_000);
+
+        timestamp = UtcTimeOnlyConverter.convert("12:05:06.123456789");
+        checkCalendar(timestamp, 12, 5, 6, 1970, 0, 1, 123_456_789);
 
         try {
             UtcTimeOnlyConverter.convert("I2:05:06.555");
@@ -271,6 +274,19 @@ public class FieldConvertersTest extends TestCase {
         } catch (FieldConvertError e) {
             // expected
         }
+    }
+
+    private void checkCalendar(Timestamp timestamp, int hourOfDay, int minute, int second, int year, int month, int dayOfMonth, int nano) {
+        Calendar c = new GregorianCalendar();
+        c.setTimeZone(TimeZone.getTimeZone("UTC"));
+        c.setTime(timestamp);
+        assertEquals(hourOfDay, c.get(Calendar.HOUR_OF_DAY));
+        assertEquals(minute, c.get(Calendar.MINUTE));
+        assertEquals(second, c.get(Calendar.SECOND));
+        assertEquals(year, c.get(Calendar.YEAR));
+        assertEquals(month, c.get(Calendar.MONTH));
+        assertEquals(dayOfMonth, c.get(Calendar.DAY_OF_MONTH));
+        assertEquals(nano, timestamp.getNanos());
     }
 
     public void testUtcDateOnlyConversion() throws Exception {
