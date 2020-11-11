@@ -172,7 +172,7 @@ subprojects {
                         }
                     }
                 } else {
-                    uniqueVersion = false // publish non unique snapshots to local repository
+//                    uniqueVersion = false // publish non unique snapshots to local repository
                     repository(url: "file://${sharedDir}")
                 }
             }
