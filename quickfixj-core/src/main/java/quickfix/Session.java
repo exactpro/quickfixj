@@ -273,6 +273,12 @@ public class Session implements Closeable {
     public static final String SETTING_MICROSECONDS_IN_TIMESTAMP = "MicrosecondsInTimeStamp";
 
     /**
+     * Session setting to enable nanoseconds in message timestamps. Valid
+     * values are "Y" or "N". Default is "Y". Only valid for FIX version &gt;= 5.0.
+     */
+    public static final String SETTING_NANOSECONDS_IN_TIMESTAMP = "NanosecondsInTimeStamp";
+
+    /**
      * Controls validation of user-defined fields.
      */
     public static final String SETTING_VALIDATE_USER_DEFINED_FIELDS = "ValidateUserDefinedFields";
@@ -402,6 +408,7 @@ public class Session implements Closeable {
     private final boolean disconnectOnError;
     private final boolean millisecondsInTimeStamp;
     private final boolean microsecondsInTimeStamp;
+    private final boolean nanosecondsInTimeStamp;
     private final boolean refreshMessageStoreAtLogon;
     private final boolean redundantResentRequestsAllowed;
     private final boolean persistMessages;
@@ -465,6 +472,32 @@ public class Session implements Closeable {
             boolean forceResendWhenCorruptedStore, Set<InetAddress> allowedRemoteAddresses,
             boolean validateIncomingMessage, int resendRequestChunkSize,
             boolean enableNextExpectedMsgSeqNum, boolean enableLastMsgSeqNumProcessed, boolean duplicateTagsAllowed, boolean ignoreAbsenceOf141tag) {
+        this(application, messageStoreFactory, sessionID, dataDictionaryProvider, sessionSchedule, logFactory, messageFactory, heartbeatInterval,
+                checkLatency, maxLatency, millisecondsInTimeStamp, microsecondsInTimeStamp, false, resetOnLogon, resetOnLogout,
+                resetOnDisconnect, refreshMessageStoreAtLogon, checkCompID, redundantResentRequestsAllowed,
+                persistMessages, useClosedRangeForResend, testRequestDelayMultiplier, senderDefaultApplVerID,
+                targetDefaultApplVerID, validateSequenceNumbers, logonIntervals, resetOnError, disconnectOnError,
+                disableHeartBeatCheck, rejectInvalidMessage, rejectMessageOnUnhandledException, requiresOrigSendingTime,
+                forceResendWhenCorruptedStore, allowedRemoteAddresses, validateIncomingMessage, resendRequestChunkSize,
+                enableNextExpectedMsgSeqNum, enableLastMsgSeqNumProcessed, duplicateTagsAllowed, ignoreAbsenceOf141tag);
+    }
+
+    public Session(Application application, MessageStoreFactory messageStoreFactory, SessionID sessionID,
+            DataDictionaryProvider dataDictionaryProvider, SessionSchedule sessionSchedule,
+            LogFactory logFactory, MessageFactory messageFactory, int heartbeatInterval,
+            boolean checkLatency, int maxLatency, boolean millisecondsInTimeStamp,
+            boolean microsecondsInTimeStamp, boolean nanosecondsInTimeStamp, boolean resetOnLogon, boolean resetOnLogout,
+            boolean resetOnDisconnect, boolean refreshMessageStoreAtLogon,
+            boolean checkCompID, boolean redundantResentRequestsAllowed,
+            boolean persistMessages, boolean useClosedRangeForResend,
+            double testRequestDelayMultiplier, DefaultApplVerID senderDefaultApplVerID,
+            ApplVerID targetDefaultApplVerID, boolean validateSequenceNumbers, int[] logonIntervals,
+            boolean resetOnError, boolean disconnectOnError,
+            boolean disableHeartBeatCheck, boolean rejectInvalidMessage,
+            boolean rejectMessageOnUnhandledException, boolean requiresOrigSendingTime,
+            boolean forceResendWhenCorruptedStore, Set<InetAddress> allowedRemoteAddresses,
+            boolean validateIncomingMessage, int resendRequestChunkSize,
+            boolean enableNextExpectedMsgSeqNum, boolean enableLastMsgSeqNumProcessed, boolean duplicateTagsAllowed, boolean ignoreAbsenceOf141tag) {
         this.application = application;
         this.sessionID = sessionID;
         this.sessionSchedule = sessionSchedule;
@@ -475,6 +508,7 @@ public class Session implements Closeable {
         this.resetOnDisconnect = resetOnDisconnect;
         this.millisecondsInTimeStamp = millisecondsInTimeStamp;
         this.microsecondsInTimeStamp = microsecondsInTimeStamp;
+        this.nanosecondsInTimeStamp = nanosecondsInTimeStamp;
         this.refreshMessageStoreAtLogon = refreshMessageStoreAtLogon;
         this.dataDictionaryProvider = dataDictionaryProvider;
         this.messageFactory = messageFactory;
@@ -739,7 +773,7 @@ public class Session implements Closeable {
     }
 
     private void insertSendingTime(Message.Header header) {
-        header.setUtcTimeStamp(SendingTime.FIELD, SystemTime.getDate(), includeMillis(), includeMicros());
+        header.setUtcTimeStamp(SendingTime.FIELD, SystemTime.getDate(), includeMillis(), includeMicros(), includeNanos());
     }
 
     private boolean includeMillis() {
@@ -749,6 +783,11 @@ public class Session implements Closeable {
 
     private boolean includeMicros() {
         return microsecondsInTimeStamp
+                && sessionID.getBeginString().compareTo(FixVersions.BEGINSTRING_FIXT11) >= 0;
+    }
+
+    private boolean includeNanos() {
+        return nanosecondsInTimeStamp
                 && sessionID.getBeginString().compareTo(FixVersions.BEGINSTRING_FIXT11) >= 0;
     }
     
@@ -1297,7 +1336,7 @@ public class Session implements Closeable {
         header.setBoolean(PossDupFlag.FIELD, true);
         initializeHeader(header);
         header.setUtcTimeStamp(OrigSendingTime.FIELD, header.getUtcTimeStamp(SendingTime.FIELD),
-                includeMillis(), includeMicros());
+                includeMillis(), includeMicros(), includeNanos());
         header.setInt(MsgSeqNum.FIELD, beginSeqNo);
         sequenceReset.setInt(NewSeqNo.FIELD, newSeqNo);
         sequenceReset.setBoolean(GapFillFlag.FIELD, true);
@@ -1330,7 +1369,7 @@ public class Session implements Closeable {
     private void initializeResendFields(Message message) throws FieldNotFound {
         final Message.Header header = message.getHeader();
         final Timestamp sendingTime = header.getUtcTimeStamp(SendingTime.FIELD);
-        header.setUtcTimeStamp(OrigSendingTime.FIELD, sendingTime, includeMillis(), includeMicros());
+        header.setUtcTimeStamp(OrigSendingTime.FIELD, sendingTime, includeMillis(), includeMicros(), includeNanos());
         header.setBoolean(PossDupFlag.FIELD, true);
         insertSendingTime(header);
     }

@@ -148,6 +148,9 @@ public class DefaultSessionFactory implements SessionFactory {
 
             final boolean microsInTimestamp = getSetting(settings, sessionID,
                     Session.SETTING_MICROSECONDS_IN_TIMESTAMP, false);
+
+            final boolean nanosInTimestamp = getSetting(settings, sessionID,
+                    Session.SETTING_NANOSECONDS_IN_TIMESTAMP, false);
             
             final boolean resetOnLogout = getSetting(settings, sessionID,
                     Session.SETTING_RESET_ON_LOGOUT, false);
