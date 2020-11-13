@@ -188,7 +188,11 @@ public abstract class FieldMap implements Serializable {
     }
 
     public void setUtcTimeOnly(int field, Timestamp value, boolean includeMillseconds, boolean includeMicroseconds) {
-        setField(new StringField(field, UtcTimeOnlyConverter.convert(value, includeMillseconds, includeMicroseconds)));
+        setUtcTimeOnly(field, value, includeMillseconds, includeMicroseconds, false);
+    }
+
+    public void setUtcTimeOnly(int field, Timestamp value, boolean includeMillseconds, boolean includeMicroseconds, boolean includeNanoseconds) {
+        setField(new StringField(field, UtcTimeOnlyConverter.convert(value, includeMillseconds, includeMicroseconds, includeNanoseconds)));
     }
 
     public void setUtcDateOnly(int field, Timestamp value) {
