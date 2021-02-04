@@ -93,12 +93,6 @@
 			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>
-		<dependency>
-			<groupId>berkeleydb</groupId>
-			<artifactId>je</artifactId>
-			<version>2.1.30</version>
-			<optional>true</optional>
-		</dependency>
 	</dependencies>
 
 	<build>

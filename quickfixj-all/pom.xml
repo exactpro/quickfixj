@@ -80,7 +80,6 @@
 						<!-- transitive dependencies are not being set as optional,
 						     see https://issues.apache.org/jira/browse/FELIX-3877 -->
 						<Import-Package>
-							com.sleepycat*;resolution:=optional,
 							org.apache.maven*;resolution:=optional,
 							org.codehaus.plexus*;resolution:=optional,
 							org.logicalcobwebs.proxool*;resolution:=optional,
