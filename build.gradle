@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2009-2018 Exactpro (Exactpro Systems Limited)
+ * Copyright 2009-2024 Exactpro (Exactpro Systems Limited)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,10 @@
  * limitations under the License.
  ******************************************************************************/
 
+plugins {
+    id 'jacoco'
+}
+
 allprojects {
     ext {
         sharedDir = file("${project.rootDir}/shared")
@@ -22,8 +26,8 @@ allprojects {
         genDir                  = file("${srcDir}/gen")
         genJavaDir              = file("${genDir}/java")
 
-        incremental_build       = project.hasProperty('i') ? true : false
-        sonatype_publish        = project.hasProperty('sonatypePublish') ? true : false
+        incremental_build       = project.hasProperty('i')
+        sonatype_publish        = project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')
 
         // Set defaults
         if (!project.hasProperty("revision")) {
@@ -37,37 +41,31 @@ allprojects {
         }
         //Lib versions
         version_slf4j = '1.7.5'
-
-        exactproVersion = '12'
     }
 }
 
+version = "${quickfixjPrefixVersion}.${exactproVersion}"
+
 subprojects {
     apply plugin: 'eclipse'
-    apply plugin: 'jacoco'
     apply plugin: 'java'
-    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
 
     if (sonatype_publish) {
         apply plugin: 'signing'
     }
 
     group = 'com.exactpro.quickfixj'
-    version = "1.6.0.${exactproVersion}"
 
-    sourceCompatibility = 1.7 //Java version compatibility to use when compiling Java source.
-    targetCompatibility = 1.7 //Java version to generate classes for.
+    sourceCompatibility = JavaVersion.VERSION_1_7 //Java version compatibility to use when compiling Java source.
+    targetCompatibility = JavaVersion.VERSION_1_7 //Java version to generate classes for.
     compileJava.options.debugOptions.debugLevel = "source,lines,vars" // Include debug information
 
     buildscript { // artifacrory plugin
         repositories {
-            jcenter()
+            mavenCentral()
+            gradlePluginPortal()
         }
-        dependencies {
-            classpath(group: 'org.jfrog.buildinfo',             name: 'build-info-extractor-gradle',        version: '2.2.+')
-            classpath(group: 'com.netflix.nebula',              name: 'gradle-extra-configurations-plugin', version: '2.2.+')
-        }
-        
         configurations.all {
            resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
         }
@@ -78,11 +76,11 @@ subprojects {
             name 'MavenLocal' // for local builds only
             url sharedDir
         }
-        jcenter()
+        mavenCentral()
     }
 
     configurations {
-        compile.exclude module: 'avalon-framework-api'
+        implementation.exclude module: 'avalon-framework-api'
 
         all {
             transitive = true
@@ -127,66 +125,79 @@ subprojects {
         }
     }
 
-    uploadArchives {
-        repositories {
-            mavenDeployer {
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+
                 if (sonatype_publish) {
-                    beforeDeployment { 
-                        MavenDeployment deployment -> signing.signPom(deployment) 
-                    }
-
-                    repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
-                        authentication(userName: ossrhUsername, password: ossrhPassword)
-                    }
-
-                    snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
-                        authentication(userName: ossrhUsername, password: ossrhPassword)
-                    }
-
-                    pom.project {
-                        name 'Exactpro QuickFixJ'
+                    pom {
+                        name = 'Exactpro QuickFixJ'
                         packaging 'jar'
                         // optionally artifactId can be defined here 
                         description 'QuickFixJ is one of such libraries we depend on and which was modified by Exactpro.'
-                        url 'https://github.com/Exactpro/quickfixj'
+                        url = vcsUrl
 
                         scm {
-                            connection 'scm:git:https://github.com/Exactpro/quickfixj'
-                            developerConnection 'scm:git:https://github.com/Exactpro/quickfixj'
-                            url 'https://github.com/Exactpro/quickfixj'
+                            connection = 'scm:git:https://github.com/Exactpro/quickfixj'
+                            developerConnection = 'scm:git:https://github.com/Exactpro/quickfixj'
+                            url = vcsUrl
                         }
 
                         licenses {
                             license {
-                                name 'The Apache License, Version 2.0'
-                                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                                name = 'The Apache License, Version 2.0'
+                                url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
                             }
                         }
 
                         developers {
                             developer {
-                                id 'Nikita-Smirnov-Exactpro'
-                                name 'Nikita Smirnov'
-                                email 'nikita.smirnov@exactprosystems.com'
+                                id = 'Nikita-Smirnov-Exactpro'
+                                name = 'Nikita Smirnov'
+                                email = 'nikita.smirnov@exactprosystems.com'
                             }
                         }
                     }
-                } else {
-//                    uniqueVersion = false // publish non unique snapshots to local repository
-                    repository(url: "file://${sharedDir}")
                 }
             }
         }
-        doFirst { sharedDir.mkdirs() }
+
+        repositories {
+            if (sonatype_publish) {
+                maven {
+                    url = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                    credentials {
+                        username = ossrhUsername
+                        password = ossrhPassword
+                    }
+                }
+                maven {
+                    url = "https://oss.sonatype.org/content/repositories/snapshots"
+                    credentials {
+                        username = ossrhUsername
+                        password = ossrhPassword
+                    }
+                }
+            } else {
+                // uniqueVersion = false // publish non unique snapshots to local repository
+                sharedDir.mkdirs()
+                maven {
+                    url = "file://${sharedDir}"
+                }
+            }
+        }
     }
 
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
+    tasks.register('sourcesJar', Jar) {
+        dependsOn classes
+        archiveClassifier = 'sources'
         from sourceSets.main.allSource
     }
 
-    task javadocJar(type: Jar, dependsOn: classes) {
-        classifier = 'javadoc'
+    tasks.register('javadocJar', Jar) {
+        dependsOn classes
+        archiveClassifier = 'javadoc'
         from javadoc
     }
 
@@ -195,6 +206,12 @@ subprojects {
     }
 
     if (sonatype_publish) {
+        tasks.withType(Sign).configureEach {
+            onlyIf {
+                project.hasProperty('signing.keyId') && project.hasProperty('signing.password')
+            }
+        }
+
         signing {
             sign configurations.archives
         }
