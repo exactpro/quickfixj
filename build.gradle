@@ -16,6 +16,7 @@
 
 plugins {
     id 'jacoco'
+    id "io.github.gradle-nexus.publish-plugin" version "2.0.0"
 }
 
 allprojects {
@@ -62,10 +63,6 @@ subprojects {
     compileJava.options.debugOptions.debugLevel = "source,lines,vars" // Include debug information
 
     buildscript { // artifacrory plugin
-        repositories {
-            mavenCentral()
-            gradlePluginPortal()
-        }
         configurations.all {
            resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
         }
@@ -166,14 +163,14 @@ subprojects {
         repositories {
             if (sonatype_publish) {
                 maven {
-                    url = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                    url = sonatypeUrl
                     credentials {
                         username = ossrhUsername
                         password = ossrhPassword
                     }
                 }
                 maven {
-                    url = "https://oss.sonatype.org/content/repositories/snapshots"
+                    url = sonatypeSnapshotsUrl
                     credentials {
                         username = ossrhUsername
                         password = ossrhPassword
@@ -184,6 +181,17 @@ subprojects {
                 sharedDir.mkdirs()
                 maven {
                     url = "file://${sharedDir}"
+                }
+            }
+        }
+    }
+
+    if(sonatype_publish) {
+        nexusPublishing {
+            repositories {
+                sonatype {
+                    nexusUrl = uri(sonatypeUrl)
+                    snapshotRepositoryUrl = uri(sonatypeSnapshotsUrl)
                 }
             }
         }

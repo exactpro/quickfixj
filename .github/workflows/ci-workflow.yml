@@ -42,7 +42,7 @@ jobs:
           SIGNING_SECRET_KEY: ${{ secrets.SIGNING_SECRET_KEY }}
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
-          ./gradlew publish \
+          ./gradlew closeAndReleaseStagingRepositories publish \
             -Psigning.keyId=$SIGNING_KEY_ID \
             -Psigning.secretKey=$SIGNING_SECRET_KEY \
             -Psigning.password=$SIGNING_PASSWORD \
