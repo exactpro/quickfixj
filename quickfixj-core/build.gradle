@@ -35,11 +35,7 @@ sourceSets {
 }
 
 dependencies {
-    if (incremental_build) {
-        implementation 'com.exactpro.quickfixj:quickfixj-code-generator:1.6.0.1-SNAPSHOT'
-    } else {
-        implementation project(':quickfixj-codegenerator')
-    }
+    implementation project(':quickfixj-codegenerator')
     
     implementation 'com.exactpro.mina:apache-mina-core:2.0.9.1'
 

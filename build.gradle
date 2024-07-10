@@ -27,8 +27,8 @@ allprojects {
         genDir                  = file("${srcDir}/gen")
         genJavaDir              = file("${genDir}/java")
 
-        incremental_build       = project.hasProperty('i')
         sonatype_publish        = project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')
+        isReleaseMode           = project.hasProperty('releaseMode')
 
         // Set defaults
         if (!project.hasProperty("revision")) {
@@ -42,10 +42,13 @@ allprojects {
         }
         //Lib versions
         version_slf4j = '1.7.5'
+
+        quickfixjVersionSuffix = (isReleaseMode)? '': '-SNAPSHOT'
+        quickfixjVersion = "${quickfixjPrefixVersion}.${exactproVersion}${quickfixjVersionSuffix}"
     }
 }
 
-version = "${quickfixjPrefixVersion}.${exactproVersion}"
+version = quickfixjVersion
 
 subprojects {
     apply plugin: 'eclipse'
@@ -57,6 +60,7 @@ subprojects {
     }
 
     group = 'com.exactpro.quickfixj'
+    version = quickfixjVersion
 
     sourceCompatibility = JavaVersion.VERSION_1_7 //Java version compatibility to use when compiling Java source.
     targetCompatibility = JavaVersion.VERSION_1_7 //Java version to generate classes for.
@@ -150,9 +154,9 @@ subprojects {
 
                         developers {
                             developer {
-                                id = 'Nikita-Smirnov-Exactpro'
-                                name = 'Nikita Smirnov'
-                                email = 'nikita.smirnov@exactprosystems.com'
+                                id.set('sf_devs')
+                                name.set('sf_devs')
+                                email.set('sf_devs@exactpro.com')
                             }
                         }
                     }
