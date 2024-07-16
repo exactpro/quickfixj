@@ -1,0 +1,27 @@
+name: Build and Publish Release Version [Test Mode]
+
+on:
+  push:
+    branches-ignore:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Prepare a tool to detect unwelcome words
+        uses: actions/checkout@v4
+        with:
+          repository: exactpro/ci-github-action
+          ref: rm86256
+          token: ${{ secrets.PAT_CI_ACTION }}
+          path: ci-github-unwelcome-words-action
+
+      - name: Run CI action to detect unwelcome words
+        uses: ./ci-github-unwelcome-words-action
+        with:
+          ref: ${{ github.sha }}
