@@ -1,0 +1,66 @@
+name: Build and Publish Snapshot
+
+on:
+  push:
+    branches-ignore:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: 11
+          distribution: liberica
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: wrapper
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare a tool to detect unwelcome words
+        uses: actions/checkout@v4
+        with:
+          repository: exactpro/ci-github-action
+          ref: master
+          token: ${{ secrets.PAT_CI_ACTION }}
+          path: ci-github-unwelcome-words-action
+
+      - name: Run CI action to detect unwelcome words
+        uses: ./ci-github-unwelcome-words-action
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Build project and run tests
+        run: ./gradlew clean build
+
+      - name: Store test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            **/build/reports/
+            **/build/test-results/
+
+      - name: Upload Archives
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
+          SIGNING_SECRET_KEY: ${{ secrets.SIGNING_SECRET_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          ./gradlew closeAndReleaseStagingRepositories publish \
+            -Psigning.keyId=$SIGNING_KEY_ID \
+            -Psigning.secretKey=$SIGNING_SECRET_KEY \
+            -Psigning.password=$SIGNING_PASSWORD \
+            -PossrhUsername=$OSSRH_USERNAME \
+            -PossrhPassword=$OSSRH_PASSWORD

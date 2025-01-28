@@ -14,9 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-apply plugin: 'artifactory'
-
-archivesBaseName 	= 'quickfixj-code-generator'
+archivesBaseName = 'quickfixj-code-generator'
 
 test.enabled = false
 compileTestJava.enabled = false
